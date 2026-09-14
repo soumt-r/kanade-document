@@ -1,0 +1,373 @@
+---
+import Layout from './Layout.astro';
+
+const { frontmatter } = Astro.props;
+
+const navItems = [
+  { title: 'はじめに', links: [
+    { text: "「カナデ」はこんな言語です！", href: '/docs/intro' },
+  ]},
+  { title: '基本文法チュートリアル', links: [
+    { text: '1. 値を入れる (変数)', href: '/docs/tutorial/1-variables' },
+    { text: '2. 計算する (演算)', href: '/docs/tutorial/2-math' },
+    { text: '3. 文字を扱う (文字列)', href: '/docs/tutorial/3-strings' },
+    { text: '4. 条件分岐（もし〜なら）', href: '/docs/tutorial/4-conditions' },
+    { text: '5. スイッチ (条件分岐)', href: '/docs/tutorial/5-switch' },
+    { text: '6. 集めて入れる (リスト、辞書)', href: '/docs/tutorial/6-collections' },
+    { text: '7. 繰り返す (繰り返し文)', href: '/docs/tutorial/7-loops' },
+    { text: '8. 関数（機能を作る）', href: '/docs/tutorial/8-functions' },
+    { text: '9. エラー処理 (例外処理)', href: '/docs/tutorial/9-errors' },
+  ]},
+  { title: 'オブジェクト指向文法', links: [
+    { text: '1. クラス（設計図）', href: '/docs/oop/1-classes' },
+    { text: '2. アクセス制御 (秘密と公開)', href: '/docs/oop/2-access-modifiers' },
+    { text: '3. 継承 (親から受け継ぐ)', href: '/docs/oop/3-inheritance' },
+    { text: '4. インターフェース (骨組みの約束)', href: '/docs/oop/4-interfaces' },
+  ]},
+  { title: 'デザインパターン (応用)', links: [
+    { text: '1. シングルトン (Singleton)', href: '/docs/patterns/1-singleton' },
+    { text: '2. ファクトリー (Factory)', href: '/docs/patterns/2-factory' },
+    { text: '3. ストラテジー (Strategy)', href: '/docs/patterns/3-strategy' },
+    { text: '4. オブザーバー (Observer)', href: '/docs/patterns/4-observer' },
+    { text: '5. ビルダー (Builder)', href: '/docs/patterns/5-builder' },
+
+      { text: '6. アダプター (Adapter)', href: '/docs/patterns/6-adapter' },
+      { text: '7. デコレーター (Decorator)', href: '/docs/patterns/7-decorator' },
+      { text: '8. ステート (State)', href: '/docs/patterns/8-state' },
+      { text: '9. コマンド (Command)', href: '/docs/patterns/9-command' },
+      { text: '10. ファサード (Facade)', href: '/docs/patterns/10-facade' },
+  ]},
+  { title: '技術仕様 (Spec)', links: [
+    { text: '1. 言語概要および文法', href: '/docs/tech-spec/1-overview' },
+    { text: '2. 構文木(AST) 構造', href: '/docs/tech-spec/2-ast' },
+    { text: '3. 実行機(Interpreter)とランタイム', href: '/docs/tech-spec/3-runtime' },
+  ]}
+];
+---
+
+<Layout title={`${frontmatter.title} | カナデ(Kanade) 言語`}>
+  <div class="flex flex-col md:flex-row gap-12 mt-10">
+    <aside class="w-full md:w-48 shrink-0 border-b md:border-b-0 border-zinc-200 pb-8 md:pb-0">
+      <div class="sticky top-12 space-y-8">
+        {navItems.map((section) => (
+          <div>
+            <h4 class="font-bold text-black mb-3 text-sm tracking-tight">{section.title}</h4>
+            <ul class="space-y-2.5">
+              {section.links.map((link) => {
+                const isActive = Astro.url.pathname === link.href || Astro.url.pathname === link.href + '/';
+                return (
+                  <li>
+                    <a 
+                      href={link.href} 
+                      class={`text-sm block transition-colors ${isActive ? 'text-black font-semibold' : 'text-zinc-500 hover:text-black'}`}
+                    >
+                      {link.text}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+
+        <button 
+          id="open-side-playground"
+          class="w-full mt-6 bg-zinc-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 shadow-sm"
+        >
+          直接実行してみる
+        </button>
+      </div>
+    </aside>
+    
+    <article class="prose max-w-none flex-grow pb-24 doc-article">
+      <h1 class="!mt-0">{frontmatter.title}</h1>
+      <p class="text-xl text-zinc-500 font-light !mb-12 !mt-0 leading-relaxed border-b border-zinc-100 pb-12">{frontmatter.description}</p>
+      <slot />
+    </article>
+  </div>
+
+  <!-- Side Playground Overlay -->
+  <div id="side-playground-drawer" class="fixed top-0 right-0 w-0 h-full bg-white border-l border-zinc-200 z-40 transition-all duration-300 flex flex-col shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 bg-zinc-50 shrink-0">
+      <h3 class="font-bold text-sm">プレイグラウンド (Playground)</h3>
+      <div class="flex gap-2">
+        <button id="side-run-btn" class="text-xs bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 font-semibold transition-colors">実行</button>
+        <button id="side-close-btn" class="text-xs bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded hover:bg-zinc-300 font-semibold transition-colors">閉じる</button>
+      </div>
+    </div>
+    <div id="side-editor" class="flex-grow w-full overflow-hidden flex flex-col min-h-0 bg-white"></div>
+    <div class="h-[40%] bg-[#1E1E1E] flex flex-col shrink-0 border-t border-zinc-800">
+      <div class="bg-[#2D2D2D] px-4 py-1.5 border-b border-zinc-700 text-xs font-semibold text-zinc-400 font-mono flex items-center gap-2 shrink-0">
+        <div class="w-2 h-2 rounded-full bg-zinc-500"></div>ターミナル
+      </div>
+      <pre id="side-output" class="p-4 text-[13.5px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed overflow-y-auto flex-grow m-0">コードを書いて「実行」ボタンを押してください。</pre>
+    </div>
+  </div>
+
+  <script>
+    import { runHaja } from '../utils/kanade';
+    import { EditorView, basicSetup } from "codemirror";
+    import { kanadeLanguage } from '../utils/kanade/cm-language';
+      import { hajaLinter, hajaAutocomplete } from '../utils/kanade/hajaLSP';
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+const createInputCallback = (outputContainer) => (promptText) => {
+  return new Promise((resolve) => {
+    if (!outputContainer) { resolve(""); return; }
+    const promptSpan = document.createElement("span");
+    promptSpan.innerText = promptText;
+    promptSpan.className = "text-yellow-400";
+    
+    const inputWrapper = document.createElement("span");
+    inputWrapper.className = "relative inline-block ml-2";
+    
+    const inputEl = document.createElement("input");
+    inputEl.type = "text";
+    inputEl.className = "bg-transparent border-b border-yellow-400/50 outline-none text-current w-64 focus:border-yellow-400 transition-all";
+    inputEl.autocomplete = "off";
+    
+    inputWrapper.appendChild(inputEl);
+    outputContainer.appendChild(promptSpan);
+    outputContainer.appendChild(inputWrapper);
+    
+    outputContainer.scrollTop = outputContainer.scrollHeight;
+    inputEl.focus();
+    
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const val = inputEl.value;
+        inputWrapper.innerHTML = "";
+        const textSpan = document.createElement("span");
+        textSpan.innerText = val;
+        inputWrapper.appendChild(textSpan);
+        outputContainer.appendChild(document.createTextNode("\n"));
+        resolve(val);
+      }
+    });
+  });
+};
+
+      /* --- Side Playground Logic --- */
+      const openBtn = document.getElementById('open-side-playground');
+      const closeBtn = document.getElementById('side-close-btn');
+      const drawer = document.getElementById('side-playground-drawer');
+      const sideRunBtn = document.getElementById('side-run-btn');
+      const sideOutput = document.getElementById('side-output');
+      const sideEditorContainer = document.getElementById('side-editor');
+      
+      let sideEditorView = null;
+
+      if (openBtn && closeBtn && drawer && sideEditorContainer) {
+        const initSideEditor = () => {
+          if (sideEditorView) return;
+          const savedCode = sessionStorage.getItem('haja-playground-code') || "『名前』を【文字】の「田中」にしよう\n枠「こんにちは、{『名前』}さん！」を出力しよう";
+          sideEditorView = new EditorView({
+            doc: savedCode,
+            extensions: [
+              basicSetup,
+              kanadeLanguage,
+              hajaLinter,
+              hajaAutocomplete,
+              EditorView.lineWrapping,
+              EditorView.theme({
+                "&": { height: "100%", fontSize: "14.5px" },
+                "&.cm-focused": { outline: "none" },
+                ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", overflow: "auto" },
+                ".cm-gutters": { backgroundColor: "#fbfbfb", borderRight: "1px solid #f0f0f0", color: "#999" }
+              }),
+              EditorView.updateListener.of((v) => {
+                if (v.docChanged) {
+                  sessionStorage.setItem('haja-playground-code', v.state.doc.toString());
+                }
+              })
+            ],
+            parent: sideEditorContainer
+          });
+        };
+
+        const openDrawer = (animate = true) => {
+          if (!animate) {
+            drawer.style.transition = 'none';
+            document.body.style.transition = 'none';
+          }
+          drawer.classList.remove('w-0');
+          drawer.classList.add('w-full', 'md:w-1/2');
+          document.body.style.width = window.innerWidth > 768 ? '50%' : '100%';
+          
+          if (!animate) {
+            void drawer.offsetWidth; // force reflow
+            drawer.style.transition = '';
+            document.body.style.transition = '';
+          } else {
+            document.body.style.transition = 'width 0.3s ease-in-out';
+          }
+          
+          initSideEditor();
+          sessionStorage.setItem('haja-playground-open', 'true');
+        };
+
+        const closeDrawer = () => {
+          drawer.classList.add('w-0');
+          drawer.classList.remove('w-full', 'md:w-1/2');
+          document.body.style.width = '100%';
+          sessionStorage.setItem('haja-playground-open', 'false');
+        };
+
+        openBtn.addEventListener('click', () => openDrawer(true));
+        closeBtn.addEventListener('click', closeDrawer);
+
+        // Check initial state
+        if (sessionStorage.getItem('haja-playground-open') === 'true') {
+          openDrawer(false);
+        }
+
+
+        // Run button logic
+        sideRunBtn?.addEventListener('click', async () => {
+          if (!sideEditorView) return;
+          sideRunBtn.innerText = '実行中...';
+          sideOutput.innerText = '';
+          let printedSomething = false;
+          
+          const outputCallback = (msg) => {
+            sideOutput.innerText += msg;
+            sideOutput.scrollTop = sideOutput.scrollHeight;
+            printedSomething = true;
+          };
+          
+          try {
+            const code = sideEditorView.state.doc.toString();
+            const result = await runHaja(code, createInputCallback(sideOutput), outputCallback);
+            if (!printedSomething && !result) {
+               sideOutput.innerText += '\n(あっ、出力された結果がありません. "出力しよう"」を使ってみてください.)';
+            }
+          } catch (err) {
+            sideOutput.innerText += "\n" + String(err);
+          } finally {
+            sideRunBtn.innerText = '実行';
+          }
+        });
+
+        // Handle resize window restoring 50% width if open
+        window.addEventListener('resize', () => {
+          if (drawer.classList.contains('md:w-1/2')) {
+            document.body.style.width = window.innerWidth > 768 ? '50%' : '100%';
+          }
+        });
+      }
+
+      /* --- Inline Interactive Blocks --- */
+      // Find all code blocks inside the article
+      const codeBlocks = document.querySelectorAll('.doc-article pre[data-language="plaintext"], .doc-article pre[data-language="haja"]');
+      
+      codeBlocks.forEach((pre, index) => {
+        // Extract raw text
+        let rawCode = "";
+        const lines = pre.querySelectorAll('.line');
+        if (lines.length > 0) {
+          rawCode = Array.from(lines).map(l => l.textContent).join('\n');
+        } else {
+          rawCode = pre.textContent || "";
+        }
+        rawCode = rawCode.trim();
+
+        // Create container for interactive block
+        const container = document.createElement('div');
+        container.className = 'not-prose my-8 shadow-md rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col';
+        
+        // Header
+        const header = document.createElement('div');
+        header.className = 'bg-zinc-50 border-b border-zinc-200 px-4 py-2 flex items-center justify-between';
+        
+        const dots = document.createElement('div');
+        dots.className = 'flex items-center gap-2';
+        dots.innerHTML = `
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+          <div class="w-3 h-3 rounded-full bg-green-400"></div>
+          <span class="ml-2 text-xs font-semibold text-zinc-400 font-mono">例題 ${index + 1}.kanade</span>
+        `;
+        
+        const runBtn = document.createElement('button');
+        runBtn.className = 'text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1 border border-blue-200';
+        runBtn.innerHTML = `実行`;
+        
+        header.appendChild(dots);
+        header.appendChild(runBtn);
+
+        // Editor area
+        const editorDiv = document.createElement('div');
+        editorDiv.className = 'w-full text-[14.5px]';
+        
+        // Output area
+        const outputWrapper = document.createElement('div');
+        outputWrapper.className = 'hidden flex-col border-t border-zinc-200 bg-zinc-900';
+        
+        const outputHeader = document.createElement('div');
+        outputHeader.className = 'bg-[#2D2D2D] px-4 py-1.5 border-b border-zinc-700 text-xs font-semibold text-zinc-400 font-mono flex items-center gap-2';
+        outputHeader.innerHTML = `<div class="w-2 h-2 rounded-full bg-zinc-500"></div>結果`;
+        
+        const outputPre = document.createElement('pre');
+        outputPre.className = 'p-4 text-[13.5px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed m-0';
+        
+        outputWrapper.appendChild(outputHeader);
+        outputWrapper.appendChild(outputPre);
+
+        container.appendChild(header);
+        container.appendChild(editorDiv);
+        container.appendChild(outputWrapper);
+
+        // Replace <pre> with our interactive container
+        pre.parentNode?.replaceChild(container, pre);
+
+        // Init CodeMirror
+        const editorView = new EditorView({
+          doc: rawCode,
+          extensions: [
+            basicSetup,
+              kanadeLanguage,
+              hajaLinter,
+              hajaAutocomplete,
+            EditorView.lineWrapping,
+            EditorView.theme({
+              "&": { height: "auto", maxHeight: "400px" },
+              "&.cm-focused": { outline: "none" },
+              ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" },
+              ".cm-gutters": { backgroundColor: "#fbfbfb", borderRight: "1px solid #f0f0f0", color: "#999" }
+            })
+          ],
+          parent: editorDiv
+        });
+
+        // Event logic
+        runBtn.addEventListener('click', async () => {
+          runBtn.innerText = '実行中...';
+          outputWrapper.classList.remove('hidden');
+          outputWrapper.classList.add('flex');
+          outputPre.innerText = '';
+          
+          let printedSomething = false;
+          
+          const outputCallback = (msg) => {
+            outputPre.innerText += msg;
+            outputPre.scrollTop = outputPre.scrollHeight;
+            printedSomething = true;
+          };
+
+          try {
+            const code = editorView.state.doc.toString();
+            const result = await runHaja(code, createInputCallback(outputPre), outputCallback);
+            if (!printedSomething && !result) {
+               outputPre.innerText += '\n(あっ、出力された結果がありません. "出力しよう"」を使ってみてください.)';
+            }
+          } catch (err) {
+            outputPre.innerText += "\n" + String(err);
+          } finally {
+            runBtn.innerHTML = '実行';
+          }
+        });
+      });
+    });
+  </script>
+</Layout>

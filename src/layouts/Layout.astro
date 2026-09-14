@@ -1,0 +1,44 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  customMaxWidth?: string;
+}
+
+const { title, customMaxWidth = "max-w-3xl" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <!-- Pretendard Web Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  </head>
+  <body class="bg-[#FAFAFA] text-zinc-900 font-['Pretendard'] antialiased selection:bg-black selection:text-white min-h-screen flex flex-col">
+    <header class={`w-full max-w-5xl mx-auto px-6 py-12 flex items-center justify-between`}>
+      <a href="/" class="flex items-center gap-2 text-xl font-bold tracking-tight hover:opacity-70 transition-opacity">
+          <img src="/favicon.svg" alt="Kanade Logo" class="w-7 h-7" />
+          <span>カナデ <span class="font-light text-zinc-400">Kanade</span></span>
+        </a>
+      <nav class="flex gap-6 text-sm font-medium text-zinc-500">
+        <!-- <a href="/playground" class="hover:text-black transition-colors font-semibold text-blue-600">プレイグラウンド</a> -->
+        <a href="/docs/intro" class="hover:text-black transition-colors">ドキュメント</a>
+        <a href="https://github.com/soumt-r/haja-document" target="_blank" class="hover:text-black transition-colors">GitHub</a>
+      </nav>
+    </header>
+    
+    <main class={`flex-grow w-full ${customMaxWidth === 'max-w-3xl' && Astro.url.pathname === '/' ? 'max-w-5xl' : customMaxWidth} mx-auto px-6 py-10 flex flex-col`}>
+      <slot />
+    </main>
+
+    <footer class={`w-full max-w-5xl mx-auto px-6 py-12 text-sm text-zinc-400 border-t border-zinc-200 mt-20`}>
+      <p>日本語で始める実用的なオブジェクト指向プログラミング言語、カナデ(Kanade)と一緒に。</p>
+    </footer>
+  </body>
+</html>

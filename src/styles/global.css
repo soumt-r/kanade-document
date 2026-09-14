@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@layer base {
+  .prose {
+    @apply text-zinc-800 leading-relaxed;
+  }
+  .prose h1 {
+    @apply text-3xl font-bold mb-6 mt-10 tracking-tight;
+  }
+  .prose h2 {
+    @apply text-2xl font-bold mb-4 mt-12 pb-2 border-b border-zinc-200 tracking-tight;
+  }
+  .prose h3 {
+    @apply text-lg font-semibold mb-3 mt-8;
+  }
+  .prose p {
+    @apply mb-6 leading-loose text-zinc-700;
+  }
+  .prose ul {
+    @apply list-disc list-outside ml-6 mb-6 text-zinc-700 flex flex-col gap-2;
+  }
+  .prose pre {
+    @apply bg-zinc-900 text-zinc-100 p-5 rounded-xl text-sm mb-6 overflow-x-auto;
+  }
+  .prose code {
+    @apply bg-zinc-100 text-zinc-900 px-1.5 py-0.5 rounded font-mono text-sm;
+  }
+  .prose pre code {
+    @apply bg-transparent text-inherit p-0 rounded-none;
+  }
+  .prose blockquote {
+    @apply border-l-4 border-zinc-300 pl-4 italic text-zinc-600 mb-6;
+  }
+  .prose a {
+    @apply text-blue-600 hover:underline underline-offset-4 decoration-blue-300;
+  }
+}
