@@ -1025,14 +1025,14 @@ export class KanadeInterpreter {
              if (isNaN(res)) throw new Error("ConversionError: 数字に変換できない値です。");
              return res;
            }
-           if ((callee === '文字に' || callee === '文字列に')) return this.format_value(args[0]);
+           if (callee === '文字列に') return this.format_value(args[0]);
            if (callee === 'コードに') {
              if (typeof args[0] !== 'string' || Array.from(args[0]).length !== 1) throw new Error("ConversionError: 一文字だけ変換できます。");
              return args[0].codePointAt(0);
            }
-           if (callee === '字に') {
+           if (callee === '文字に') {
              return String.fromCodePoint(args[0]);
-           }
+          }
         }
         
         const func_decl = this.functions[callee];
