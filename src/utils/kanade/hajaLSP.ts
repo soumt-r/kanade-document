@@ -100,7 +100,7 @@ export function hajaCompletions(context: CompletionContext): CompletionResult | 
     walk(ast);
 
     if (isType) {
-      const builtins = ["【文字】", "【数字】", "【真偽】"];
+      const builtins = ["【文字列】", "【数字】", "【真偽】"];
       for (const b of builtins) {
         if (!seen.has(b)) {
           seen.add(b);

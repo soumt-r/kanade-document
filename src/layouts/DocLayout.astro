@@ -161,7 +161,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
       if (openBtn && closeBtn && drawer && sideEditorContainer) {
         const initSideEditor = () => {
           if (sideEditorView) return;
-          const savedCode = sessionStorage.getItem('haja-playground-code') || "『名前』を【文字】の「田中」にしよう\n枠「こんにちは、{『名前』}さん！」を出力しよう";
+          const savedCode = sessionStorage.getItem('haja-playground-code') || "『名前』を【文字列】の「田中」にしよう\n枠「こんにちは、{『名前』}さん！」を出力しよう";
           sideEditorView = new EditorView({
             doc: savedCode,
             extensions: [

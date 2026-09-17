@@ -345,10 +345,10 @@ export class KanadeInterpreter {
       if (this.outputCallback) this.outputCallback(val);
     } else if (t === 'InputStatement') {
         const target = stmt.target.name;
-        const typeAnn = stmt.typeAnnotation ? stmt.typeAnnotation.name : '文字';
+        const typeAnn = stmt.typeAnnotation ? stmt.typeAnnotation.name : '文字列';
         let user_input = "";
         
-        if (!['文字', '数字', '真偽'].includes(typeAnn)) {
+        if (!['文字', '文字列', '数字', '真偽'].includes(typeAnn)) {
             throw new Error(`UnsupportedInputTypeError: '${typeAnn}' タイプは入力で受け取れません。`);
         }
         
@@ -1128,7 +1128,7 @@ export class KanadeInterpreter {
           
           if (checkType) {
             const r_str = checkType;
-            if (r_str === '文字') return typeof l === 'string';
+            if (r_str === '文字' || r_str === '文字列') return typeof l === 'string';
             if (r_str === '数字') return typeof l === 'number';
             if (r_str === '真偽') return typeof l === 'boolean';
             if (r_str === 'リスト' || r_str === 'リスト') return Array.isArray(l);
