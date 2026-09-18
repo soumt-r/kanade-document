@@ -105,10 +105,10 @@ const navItems = [
   </div>
 
   <script>
-    import { runHaja } from '../utils/kanade';
+    import { runKanade } from '../utils/kanade';
     import { EditorView, basicSetup } from "codemirror";
     import { kanadeLanguage } from '../utils/kanade/cm-language';
-      import { hajaLinter, hajaAutocomplete } from '../utils/kanade/hajaLSP';
+      import { kanadeLinter, kanadeAutocomplete } from '../utils/kanade/kanadeLSP';
 
     document.addEventListener("DOMContentLoaded", () => {
 
@@ -167,8 +167,8 @@ const createInputCallback = (outputContainer) => (promptText) => {
             extensions: [
               basicSetup,
               kanadeLanguage,
-              hajaLinter,
-              hajaAutocomplete,
+              kanadeLinter,
+              kanadeAutocomplete,
               EditorView.lineWrapping,
               EditorView.theme({
                 "&": { height: "100%", fontSize: "14.5px" },
@@ -238,7 +238,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
           
           try {
             const code = sideEditorView.state.doc.toString();
-            const result = await runHaja(code, createInputCallback(sideOutput), outputCallback);
+            const result = await runKanade(code, createInputCallback(sideOutput), outputCallback);
             if (!printedSomething && !result) {
                sideOutput.innerText += '\n(あっ、出力された結果がありません. "出力しよう"」を使ってみてください.)';
             }
@@ -327,8 +327,8 @@ const createInputCallback = (outputContainer) => (promptText) => {
           extensions: [
             basicSetup,
               kanadeLanguage,
-              hajaLinter,
-              hajaAutocomplete,
+              kanadeLinter,
+              kanadeAutocomplete,
             EditorView.lineWrapping,
             EditorView.theme({
               "&": { height: "auto", maxHeight: "400px" },
@@ -357,7 +357,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
 
           try {
             const code = editorView.state.doc.toString();
-            const result = await runHaja(code, createInputCallback(outputPre), outputCallback);
+            const result = await runKanade(code, createInputCallback(outputPre), outputCallback);
             if (!printedSomething && !result) {
                outputPre.innerText += '\n(あっ、出力された結果がありません. "出力しよう"」を使ってみてください.)';
             }
