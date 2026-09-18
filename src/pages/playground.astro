@@ -46,10 +46,10 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    import { runHaja } from '../utils/kanade';
+    import { runKanade } from '../utils/kanade';
     import { EditorView, basicSetup } from "codemirror";
     import { kanadeLanguage } from '../utils/kanade/cm-language';
-      import { hajaLinter, hajaAutocomplete } from '../utils/kanade/hajaLSP';
+    import { kanadeLinter, kanadeAutocomplete } from '../utils/kanade/kanadeLSP';
 
     const defaultCode = `枠「こんにちは、世界！」を出力しよう`;
 
@@ -66,8 +66,8 @@ import Layout from '../layouts/Layout.astro';
         extensions: [
           basicSetup,
           kanadeLanguage,
-            hajaLinter,
-            hajaAutocomplete,
+            kanadeLinter,
+            kanadeAutocomplete,
           EditorView.lineWrapping,
           EditorView.theme({
             "&": { height: "100%", fontSize: "15.5px" },
@@ -137,7 +137,7 @@ import Layout from '../layouts/Layout.astro';
             });
           };
 
-          const result = await runHaja(code, inputCallback, outputCallback);
+          const result = await runKanade(code, inputCallback, outputCallback);
           
           // Only show default message if literally nothing was printed via outputCallback OR return
           if (!printedSomething && !result) {
