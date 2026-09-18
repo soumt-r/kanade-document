@@ -124,7 +124,11 @@ export class KanadeInterpreter {
     if (typeof val === "boolean") return val ? this.config.trueString : this.config.falseString;
     if (Array.isArray(val)) return "[" + val.map((el) => this.formatValue(el)).join(", ") + "]";
     if (val instanceof Map) {
-      const entries = Array.from(val.entries()).map(([k, v]) => `${this.formatValue(k)}: ${this.formatValue(v)}`);
+      // Sorted by displayed key, like hana's Go FormatValue (Go maps have no
+      // insertion order), so both engines print a dictionary identically.
+      const entries = Array.from(val.entries())
+        .map(([k, v]) => `${this.formatValue(k)}: ${this.formatValue(v)}`)
+        .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
       return "{" + entries.join(", ") + "}";
     }
     if (typeof val === "number") {
