@@ -25,6 +25,7 @@ import {
 } from "./object";
 import { ReturnSignal } from "./errors";
 import { parseExpressionFromSource } from "./parser";
+import { RuntimeError, Codes, accessViolation, typeNameOf } from "./errs";
 
 // execBlock runs a statement list in env and returns the function's return
 // value if a ReturnStatement fired inside it (mirrors every Go call site's
@@ -96,7 +97,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         if (cur.this_ !== null) return cur.this_;
         cur = cur.parent;
       }
-      throw new Error("ReferenceError: 'this' is not bound");
+      throw new RuntimeError(Codes.ThisNotBound);
     }
     case "SuperReference": {
       let cur: Environment | null = env;
@@ -104,7 +105,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         if (cur.this_ !== null) return new SuperReferenceValue(cur.this_);
         cur = cur.parent;
       }
-      throw new Error("ReferenceError: Cannot use 'super' outside of a class method");
+      throw new RuntimeError(Codes.SuperOutsideMethod);
     }
     case "StaticReference": {
       let cur: Environment | null = env;
@@ -113,7 +114,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         if (ok && typeof val === "string") return new ClassReference(val);
         cur = cur.parent;
       }
-      throw new Error("ReferenceError: Cannot use static reference outside of a class method");
+      throw new RuntimeError(Codes.StaticOutsideMethod);
     }
     case "Identifier": {
       if (i.config.selfWords.includes(expr.value)) {
@@ -130,7 +131,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
       const [val, ok] = env.get(expr.value);
       if (!ok) {
         if (i.classes[expr.value]) return new ClassReference(expr.value);
-        throw new Error(`ReferenceError: Variable '${expr.value}' not found.`);
+        throw new RuntimeError(Codes.VariableNotFound, expr.value);
       }
       return val;
     }
@@ -169,7 +170,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
     case "NewExpression": {
       const clsName = expr.class.name;
       const cls = i.classes[clsName];
-      if (!cls) throw new Error(`ReferenceError: Class '${clsName}' not found.`);
+      if (!cls) throw new RuntimeError(Codes.ClassNotFound, clsName);
       const obj = new HajaObject(clsName);
 
       for (const stmt of cls.body) {
@@ -239,7 +240,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
             }
           }
         }
-        if (funcDecl === null) throw new Error(`MethodNotFoundError: Global function '${funcName}' not found.`);
+        if (funcDecl === null) throw new RuntimeError(Codes.GlobalFunctionNotFound, funcName);
         const funcEnv = new Environment(i.globalEnv);
         await bindParams(i, funcDecl.params, args, funcEnv);
         return await execBlock(i, funcDecl.body.statements, funcEnv);
@@ -265,7 +266,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
             break;
           }
         }
-        if (funcDecl === null) throw new Error(`MethodNotFoundError: Static method '${callee.funcName}' not found.`);
+        if (funcDecl === null) throw new RuntimeError(Codes.StaticMethodNotFound, callee.funcName);
         const funcEnv = new Environment(i.globalEnv);
         funcEnv.declare("__selfClass__", callee.className);
         await bindParams(i, funcDecl.params, args, funcEnv);
@@ -274,10 +275,10 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         // 인자 개수/타입을 먼저 확인한다 — 확인 없이 바로 args[0]에 접근하면
         // 인자가 없거나 타입이 틀릴 때 하자 에러가 아니라 JS 예외로 죽는다.
         if (callee.funcName === i.config.stringSliceMethod) {
-          if (args.length !== 2) throw new Error("ArgumentsError: 자르기는 인자 2개가 필요해요.");
+          if (args.length !== 2) throw new RuntimeError(Codes.ArgCountExact, 2);
           const [startNum, endNum] = args;
           if (typeof startNum !== "number" || typeof endNum !== "number") {
-            throw new Error("TypeError: 자르기의 인자는 숫자여야 해요.");
+            throw new RuntimeError(Codes.MethodArgMustBeNumber, callee.funcName);
           }
           const chars = Array.from(callee.value);
           let start = startNum - 1;
@@ -287,33 +288,33 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
           if (start > end) start = end;
           return chars.slice(start, end).join("");
         } else if (callee.funcName === i.config.stringReplaceMethod) {
-          if (args.length !== 2) throw new Error("ArgumentError: 2개의 인자가 필요합니다.");
+          if (args.length !== 2) throw new RuntimeError(Codes.ArgCountExact, 2);
           const [oldStr, newStr] = args;
           if (typeof oldStr !== "string" || typeof newStr !== "string") {
-            throw new Error("TypeError: 바꾸기의 인자는 문자열이어야 해요.");
+            throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
           }
           return callee.value.split(oldStr).join(newStr);
         } else if (callee.funcName === i.config.stringSplitMethod) {
-          if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
+          if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
           const sep = args[0];
-          if (typeof sep !== "string") throw new Error("TypeError: 분리하기의 인자는 문자열이어야 해요.");
+          if (typeof sep !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
           return callee.value.split(sep);
         } else if (callee.funcName === i.config.stringContainsMethod) {
-          if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
+          if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
           const sub = args[0];
-          if (typeof sub !== "string") throw new Error("TypeError: 포함확인의 인자는 문자열이어야 해요.");
+          if (typeof sub !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
           return callee.value.includes(sub);
         }
-        throw new Error(`MethodNotFoundError: '${callee.funcName}' 메서드를 찾을 수 없어요.`);
+        throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
       } else if (callee instanceof BoundListMethod) {
         // 목록은 "언어 네이티브 구문"(추가하자/꺼내자 등)으로 조작하는 게 기본
         // 설계라, 메서드 형태로 남은 건 비우기 하나뿐.
         if (callee.funcName === i.config.listClearMethod) {
-          if (args.length !== 0) throw new Error("ArgumentError: 0개의 인자가 필요합니다.");
+          if (args.length !== 0) throw new RuntimeError(Codes.ArgCountExact, 0);
           if (callee.target !== null) await assignListBack(i, callee.target, [], env);
           return null;
         }
-        throw new Error(`MethodNotFoundError: '${callee.funcName}' 메서드를 찾을 수 없어요.`);
+        throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
       } else if (callee instanceof BoundMethod) {
         const cls = i.classes[callee.object.className];
         let funcDecl: ast.FunctionDeclaration | null = null;
@@ -337,7 +338,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
           return false;
         });
         if (funcDecl === null && ctorDecl === null) {
-          throw new Error(`MethodNotFoundError: Method '${callee.funcName}' not found.`);
+          throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
         }
         const funcEnv = new Environment(i.globalEnv);
         funcEnv.this_ = callee.object;
@@ -353,7 +354,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         }
         return null;
       }
-      throw new Error("TypeError: Not callable.");
+      throw new RuntimeError(Codes.NotCallable);
     }
     case "ListLiteral": {
       const elements: unknown[] = [];
@@ -362,8 +363,8 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
     }
     case "ListPopExpression": {
       const targetVal = await evaluateNode(i, expr.target, env);
-      if (!Array.isArray(targetVal)) throw new Error("TypeError: Not a list.");
-      if (targetVal.length === 0) throw new Error("IndexOutOfBoundsError: The list is empty.");
+      if (!Array.isArray(targetVal)) throw new RuntimeError(Codes.NotAList);
+      if (targetVal.length === 0) throw new RuntimeError(Codes.ListEmpty);
       const [popped, newList] = popFromList(targetVal, expr.position);
       await assignListBack(i, expr.target, newList, env);
       return popped;
@@ -390,7 +391,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
 
       if (obj instanceof SuperReferenceValue) {
         if (property.type !== "FunctionReference") {
-          throw new Error("TypeError: 부모의 속성은 함수(메서드)로만 부를 수 있어요.");
+          throw new RuntimeError(Codes.SuperMemberMustBeMethod);
         }
         return new BoundMethod(obj.object, property.name, true);
       }
@@ -426,10 +427,10 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         if (access !== "public") {
           const [thisObj, hasThis] = env.get("this");
           if (!hasThis) {
-            throw new Error(`AccessViolationError: '${propName}' is ${access} and cannot be accessed.`);
+            throw accessViolation(access, isFunc, propName);
           }
           if (access === "private" && thisObj !== obj) {
-            throw new Error(`AccessViolationError: '${propName}'는 내부 전용(private)이라 접근할 수 없어요.`);
+            throw accessViolation(access, isFunc, propName);
           }
         }
 
@@ -469,14 +470,14 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         const idxObj = await evaluateNode(i, property, env).catch(() => undefined);
         if (typeof idxObj === "number") {
           const idx = idxObj - 1;
-          if (idx < 0 || idx >= obj.length) throw new Error("IndexOutOfBoundsError: 목록의 길이를 벗어난 위치(인덱스)예요.");
+          if (idx < 0 || idx >= obj.length) throw new RuntimeError(Codes.ListIndexOutOfRange);
           return obj[idx];
         }
-        throw new Error("TypeError: List index must be a number.");
+        throw new RuntimeError(Codes.ListIndexMustBeNumber);
       } else if (obj instanceof Map) {
         const key = await evaluateNode(i, property, env);
         if (obj.has(key)) return obj.get(key);
-        throw new Error(`KeyError: Key '${String(key)}' not found.`);
+        throw new RuntimeError(Codes.DictKeyNotFound, key);
       } else if (obj instanceof ClassReference) {
         const clsName = obj.className;
         let propName = "";
@@ -491,7 +492,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         }
 
         const cls = i.classes[clsName];
-        if (!cls) throw new Error(`ReferenceError: Class '${clsName}' not found.`);
+        if (!cls) throw new RuntimeError(Codes.ClassNotFound, clsName);
 
         if (isFunc) {
           for (const stmt of cls.body) {
@@ -504,7 +505,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
           const [val, ok] = i.globalEnv.get(globalKey);
           if (ok) return val;
         }
-        throw new Error(`KeyError: Static member '${propName}' not found.`);
+        throw new RuntimeError(Codes.StaticMemberNotFound, propName);
       } else if (typeof obj === "string") {
         let propName = "";
         let isFunc = false;
@@ -524,12 +525,12 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
         if (typeof idxObj === "number") {
           const idx = idxObj - 1;
           const chars = Array.from(obj);
-          if (idx < 0 || idx >= chars.length) throw new Error("IndexOutOfBoundsError: 문자열의 길이를 벗어난 위치예요.");
+          if (idx < 0 || idx >= chars.length) throw new RuntimeError(Codes.StringIndexOutOfRange);
           return chars[idx];
         }
-        throw new Error("MemberAccessError: Cannot access members on string.");
+        throw new RuntimeError(Codes.MemberAccessOnString);
       }
-      throw new Error("MemberAccessError: Cannot access members on this type.");
+      throw new RuntimeError(Codes.MemberAccessUnsupported, typeNameOf(obj));
     }
     case "LogicalExpression": {
       const left = await evaluateNode(i, expr.left, env);
@@ -585,10 +586,10 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
           case "*":
             return left * right;
           case "/":
-            if (right === 0) throw new Error("DivideByZeroError: Division by zero.");
+            if (right === 0) throw new RuntimeError(Codes.DivideByZero);
             return left / right;
           case "%":
-            if (right === 0) throw new Error("DivideByZeroError: Division by zero.");
+            if (right === 0) throw new RuntimeError(Codes.DivideByZero);
             return Math.trunc(left) % Math.trunc(right);
           case ">":
             return left > right;

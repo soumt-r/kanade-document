@@ -19,8 +19,12 @@ function extractKanadeBlocks(markdown: string): string[] {
     return blocks;
 }
 
+// 에러도 비교한다: 실행이 에러로 끝나면 그 문구(현지화된 최종 메시지)를 출력 뒤에
+// 붙여서, TS 엔진이 Go 엔진과 같은 문구를 내는지 잡아낸다. Go 쪽은 stderr의
+// "ランタイムエラー: <メッセージ>" 줄에서 같은 메시지를 뽑는다.
 async function runTypeScriptEngine(code: string): Promise<string> {
     let output = "";
+    let error = "";
     try {
         const lexer = new Lexer(code);
         const parser = new Parser(lexer.tokens);
@@ -33,9 +37,13 @@ async function runTypeScriptEngine(code: string): Promise<string> {
         };
         await interpreter.run();
     } catch (e: any) {
-        // Ignore errors, we only care about output
+        error = String(e?.message ?? e);
     }
-    return output.trim();
+    return withError(output.trim(), error);
+}
+
+function withError(output: string, error: string): string {
+    return error ? `${output}\n!! ${error}` : output;
 }
 
 function runGoEngine(code: string): string {
@@ -50,7 +58,10 @@ function runGoEngine(code: string): string {
         return result.toString().trim();
     } catch (e: any) {
         unlinkSync(tempFile);
-        return e.stdout ? e.stdout.toString().trim() : "";
+        const stdout = e.stdout ? e.stdout.toString().trim() : "";
+        const stderr = e.stderr ? e.stderr.toString() : "";
+        const m = stderr.match(/^ランタイムエラー: (.*)$/m);
+        return withError(stdout, m ? m[1].trim() : "");
     }
 }
 

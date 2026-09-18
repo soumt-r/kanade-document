@@ -12,6 +12,7 @@ import { type LangConfig, JapaneseConfig } from "./config";
 import { evaluateNode } from "./evalExpr";
 import { executeStmt } from "./execStmt";
 import { KanadeRuntimeError } from "./errors";
+import { RuntimeError, Codes, localize } from "./errs";
 import { BuiltinFunction, type BuiltinFn, type NativeModule } from "./object";
 
 export class KanadeInterpreter {
@@ -62,29 +63,27 @@ export class KanadeInterpreter {
       }
     }
 
-    // 2. 인터페이스 검증 (Pre-flight Validation)
-    for (const clsName in this.classes) {
-      const cls = this.classes[clsName];
-      for (const ifaceRef of cls.interfaces) {
-        const iface = this.interfaces[ifaceRef.name];
-        if (!iface) continue;
-        for (const reqStmt of iface.body) {
-          if (reqStmt.type === "InterfaceMethod") {
-            const implemented = cls.body.some(
-              (clsStmt) => clsStmt.type === "FunctionDeclaration" && clsStmt.name.value === reqStmt.name.value,
-            );
-            if (!implemented) {
-              throw new KanadeRuntimeError(
-                `InterfaceImplementationError: Class '${clsName}' must implement method '${reqStmt.name.value}' of the interface.`,
+    try {
+      // 2. 인터페이스 검증 (Pre-flight Validation)
+      for (const clsName in this.classes) {
+        const cls = this.classes[clsName];
+        for (const ifaceRef of cls.interfaces) {
+          const iface = this.interfaces[ifaceRef.name];
+          if (!iface) continue;
+          for (const reqStmt of iface.body) {
+            if (reqStmt.type === "InterfaceMethod") {
+              const implemented = cls.body.some(
+                (clsStmt) => clsStmt.type === "FunctionDeclaration" && clsStmt.name.value === reqStmt.name.value,
               );
+              if (!implemented) {
+                throw new RuntimeError(Codes.InterfaceNotImplemented, clsName, ifaceRef.name, reqStmt.name.value);
+              }
             }
           }
         }
       }
-    }
 
-    // 3. 실행
-    try {
+      // 3. 실행
       for (const stmt of this.ast.statements) {
         if (stmt.type === "ClassDeclaration") {
           for (const clsStmt of stmt.body) {
@@ -109,8 +108,7 @@ export class KanadeInterpreter {
       }
     } catch (e) {
       if (e instanceof KanadeRuntimeError) throw e;
-      const msg = e instanceof Error ? e.message : String(e);
-      throw new KanadeRuntimeError(msg);
+      throw new KanadeRuntimeError(localize(this.config.locale, e));
     }
 
     if (this.inlineBuffer !== "") {

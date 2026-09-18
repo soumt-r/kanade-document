@@ -3,6 +3,7 @@
 // no runtime language switching inside one repo, per the "구조만 미러링,
 // 레포는 분리" decision).
 import type { Expression } from "./ast";
+import type { Locale } from "./errs";
 
 export interface LangConfig {
   builtinToString: string;
@@ -39,6 +40,11 @@ export interface LangConfig {
   // "기호 같다" regardless of language until a real kanade-docs example
   // (oop/1-classes.md's 〈記号 同じだ〉) was found to never match.
   equalsMethodName: string;
+
+  // locale picks the wording errs.localize renders a runtime error in wherever
+  // it becomes user-visible text (a `発生したら` handler's caught message, the
+  // Playground's error output). Mirrors vm.LangConfig.Locale.
+  locale: Locale;
 
   parseEmbeddedExpr?: (code: string) => Expression;
 }
@@ -88,4 +94,5 @@ export const JapaneseConfig: LangConfig = {
   // kanade-docs/src/pages/docs/oop/1-classes.md's actual method name
   // (〈記号 同じだ〉, delimiters stripped).
   equalsMethodName: "記号 同じだ",
+  locale: "ja",
 };

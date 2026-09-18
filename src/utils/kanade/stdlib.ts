@@ -7,58 +7,55 @@
 // this engine's ImportStatement handling blanket-refuses every import,
 // native modules included — see execStmt.ts's ImportStatement case; that
 // matches this repo's previous ad hoc engine's own behavior, not a new gap).
-// Error message text below stays Korean even here — Go's own
-// hana/stdlib/builtins.go hardcodes the same Korean strings regardless of
-// KoreanConfig/JapaneseConfig, so this mirrors that faithfully rather than
-// translating text Go itself never localizes.
 import { BuiltinFunction, type NativeModule } from "./object";
 import type { KanadeInterpreter } from "./interpreter";
+import { RuntimeError, Codes } from "./errs";
 
 export function registerStandardLibrary(i: KanadeInterpreter): void {
   const cfg = i.config;
 
   i.registerBuiltin(cfg.builtinToString, (_env, ...args) => {
-    if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
+    if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
     return i.formatValue(args[0]);
   });
 
   i.registerBuiltin(cfg.builtinToNumber, (_env, ...args) => {
-    if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
+    if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
     const v = args[0];
     if (typeof v === "number") return v;
     if (typeof v === "string") {
       const num = Number(v);
-      if (Number.isNaN(num) || v.trim() === "") throw new Error(`ConversionError: '${v}'을(를) 숫자로 바꿀 수 없습니다.`);
+      if (Number.isNaN(num) || v.trim() === "") throw new RuntimeError(Codes.ConvertToNumberFailed, v);
       return num;
     }
-    throw new Error("ConversionError: 숫자로 바꿀 수 없는 값입니다.");
+    throw new RuntimeError(Codes.ConvertToNumberInvalid);
   });
 
   i.registerBuiltin(cfg.builtinToCode, (_env, ...args) => {
-    if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
+    if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
     const s = args[0];
     if (typeof s !== "string" || Array.from(s).length !== 1) {
-      throw new Error("ConversionError: <코드로>는 길이가 1인 문자열이 필요합니다.");
+      throw new RuntimeError(Codes.ConvertToCodeNeedsOneChar, cfg.builtinToCode);
     }
     return s.codePointAt(0)!;
   });
 
   i.registerBuiltin(cfg.builtinToText, (_env, ...args) => {
-    if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
+    if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
     const num = args[0];
-    if (typeof num !== "number") throw new Error("ConversionError: 숫자가 아닌 값은 글자로 바꿀 수 없습니다.");
+    if (typeof num !== "number") throw new RuntimeError(Codes.ConvertToTextNeedsNumber);
     return String.fromCodePoint(num);
   });
 
   const mathModule: NativeModule = {
     [cfg.mathCeil]: new BuiltinFunction(cfg.mathCeil, (_env, ...args) => {
-      if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
-      if (typeof args[0] !== "number") throw new Error("TypeError: 숫자가 아닙니다.");
+      if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
+      if (typeof args[0] !== "number") throw new RuntimeError(Codes.NotANumber);
       return Math.ceil(args[0]);
     }),
     [cfg.mathFloor]: new BuiltinFunction(cfg.mathFloor, (_env, ...args) => {
-      if (args.length !== 1) throw new Error("ArgumentError: 1개의 인자가 필요합니다.");
-      if (typeof args[0] !== "number") throw new Error("TypeError: 숫자가 아닙니다.");
+      if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
+      if (typeof args[0] !== "number") throw new RuntimeError(Codes.NotANumber);
       return Math.floor(args[0]);
     }),
   };

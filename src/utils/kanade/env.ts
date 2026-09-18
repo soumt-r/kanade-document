@@ -1,6 +1,7 @@
 // Mirrors hana/vm/env.go's Environment: a parent-pointer scope chain with a
 // `this` fallback for instance-member lookup inside methods.
 import { HajaObject } from "./object";
+import { RuntimeError, Codes } from "./errs";
 
 export class Environment {
   private vars = new Map<string, unknown>();
@@ -33,7 +34,7 @@ export class Environment {
   assign(name: string, value: unknown): [boolean, Error | null] {
     if (this.vars.has(name)) {
       if (this.isConst(name)) {
-        return [false, new Error(`ConstantAssignmentError: '${name}'은(는) 고정된 값이라 바꿀 수 없어요.`)];
+        return [false, new RuntimeError(Codes.ConstantAssignment, name)];
       }
       this.vars.set(name, value);
       return [true, null];

@@ -20,6 +20,7 @@ import { popFromList, assignListBack } from "./listOps";
 import { findInClassChain, thrownValueMatchesType } from "./classLookup";
 import { HajaObject, ClassReference } from "./object";
 import { ReturnSignal, BreakSignal, ThrownSignal } from "./errors";
+import { RuntimeError, Codes, localize } from "./errs";
 
 export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env: Environment): Promise<void> {
   switch (stmt.type) {
@@ -50,7 +51,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
               errObj = e.value;
             } else {
               errObj = new HajaObject(i.config.builtinErrorClass);
-              const msg = e instanceof ThrownSignal ? String(e.value) : e instanceof Error ? e.message : String(e);
+              const msg = e instanceof ThrownSignal ? String(e.value) : localize(i.config.locale, e);
               errObj.props[i.config.builtinErrorMessage] = msg;
             }
             catchEnv.declare(matchedHandler.param.value, errObj);
@@ -81,7 +82,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
     }
     case "ListPushStatement": {
       const targetVal = await evaluateNode(i, stmt.target, env);
-      if (!Array.isArray(targetVal)) throw new Error("TypeError: Not a list.");
+      if (!Array.isArray(targetVal)) throw new RuntimeError(Codes.NotAList);
       const pushVal = await evaluateNode(i, stmt.value, env);
       const newList = stmt.position === "front" ? [pushVal, ...targetVal] : [...targetVal, pushVal];
       await assignListBack(i, stmt.target, newList, env);
@@ -89,8 +90,8 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
     }
     case "ListPopStatement": {
       const targetVal = await evaluateNode(i, stmt.target, env);
-      if (!Array.isArray(targetVal)) throw new Error("TypeError: Not a list.");
-      if (targetVal.length === 0) throw new Error("IndexOutOfBoundsError: The list is empty.");
+      if (!Array.isArray(targetVal)) throw new RuntimeError(Codes.NotAList);
+      if (targetVal.length === 0) throw new RuntimeError(Codes.ListEmpty);
       const [, newList] = popFromList(targetVal, stmt.position);
       await assignListBack(i, stmt.target, newList, env);
       return;
@@ -104,7 +105,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
     case "ImportStatement":
       // 웹 놀이터에서는 외부 파일(모듈) 가져오기를 지원하지 않는다 — Go의
       // vm/import.go(파일시스템·DLL FFI)는 브라우저 새시박스에 적용 불가.
-      throw new Error("웹 놀이터에서는 외부 파일(모듈) 가져오기를 아직 지원하지 않아요.");
+      throw new RuntimeError(Codes.ImportUnsupported);
     case "VariableDeclaration": {
       const val = await evaluateNode(i, stmt.value, env);
       if (stmt.isStatic) {
@@ -125,7 +126,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
     case "InputStatement": {
       const typeAnn = stmt.typeRef ? stmt.typeRef.name : "文字列";
       if (!["文字列", "数字", "論理"].includes(typeAnn)) {
-        throw new Error(`UnsupportedInputTypeError: '${typeAnn}'型は入力として受け取れません。`);
+        throw new RuntimeError(Codes.InputTypeUnsupported, typeAnn);
       }
 
       let userInput: string;
@@ -138,12 +139,12 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       let val: unknown = userInput;
       if (typeAnn === "数字") {
         const num = Number(userInput);
-        if (Number.isNaN(num)) throw new Error(`InputConversionError: '${userInput}'を数字に変換できません。`);
+        if (Number.isNaN(num)) throw new RuntimeError(Codes.InputToNumberFailed, userInput);
         val = num;
       } else if (typeAnn === "論理") {
         if (userInput === i.config.trueString) val = true;
         else if (userInput === i.config.falseString) val = false;
-        else throw new Error(`InputConversionError: '${userInput}'を真/偽に変換できません。`);
+        else throw new RuntimeError(Codes.InputToBooleanFailed, userInput);
       }
 
       i.inlineBuffer = "";
@@ -181,7 +182,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
         itemName = i.config.defaultItemName;
       }
 
-      if (!Array.isArray(listVal)) throw new Error("TypeError: Not iterable.");
+      if (!Array.isArray(listVal)) throw new RuntimeError(Codes.NotIterable);
       for (const item of listVal) {
         const loopEnv = new Environment(env);
         loopEnv.declare(itemName, item);
@@ -213,7 +214,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       const startVal = await evaluateNode(i, stmt.start, env);
       const endVal = await evaluateNode(i, stmt.end, env);
       if (typeof startVal !== "number" || typeof endVal !== "number") {
-        throw new Error("TypeError: Range must be numbers.");
+        throw new RuntimeError(Codes.RangeMustBeNumbers);
       }
       const step = startVal > endVal ? -1 : 1;
       for (let v = startVal; step > 0 ? v <= endVal : v >= endVal; v += step) {

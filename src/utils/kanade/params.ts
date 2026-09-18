@@ -3,6 +3,7 @@ import type * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { evaluateNode } from "./evalExpr";
+import { RuntimeError, Codes } from "./errs";
 
 // bindParams binds call arguments to a function/method/constructor's declared
 // parameters into env:
@@ -13,7 +14,7 @@ import { evaluateNode } from "./evalExpr";
 //   - more arguments than declared parameters is a hard ArgumentError.
 export async function bindParams(i: KanadeInterpreter, params: ast.Parameter[], args: unknown[], env: Environment): Promise<void> {
   if (args.length > params.length) {
-    throw new Error(`ArgumentError: 인자가 너무 많아요. ${params.length}개를 기대했는데 ${args.length}개를 받았어요.`);
+    throw new RuntimeError(Codes.TooManyArguments, params.length, args.length);
   }
   for (let idx = 0; idx < params.length; idx++) {
     const param = params[idx];
@@ -26,6 +27,6 @@ export async function bindParams(i: KanadeInterpreter, params: ast.Parameter[], 
       env.declare(param.name.value, val);
       continue;
     }
-    throw new Error(`MissingArgumentError: '${param.name.value}' 인자가 필요해요.`);
+    throw new RuntimeError(Codes.MissingArgument, param.name.value);
   }
 }
