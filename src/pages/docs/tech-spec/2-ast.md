@@ -11,4 +11,4 @@ description: カナデ(Kanade) 言語の抽象構文木(AST)仕様です。
 
 詳細なASTノードの仕様については、以下のハジャ（Haja）のドキュメントを参照してください。
 
-* <strong><a href="https://haja.soumt.moe/docs/tech-spec/2-ast">Haja AST 仕様書</a></strong>
+* **[Haja AST 仕様書](https://haja.soumt.moe/docs/tech-spec/2-ast)**

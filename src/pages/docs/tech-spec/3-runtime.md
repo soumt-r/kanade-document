@@ -11,4 +11,4 @@ description: カナデ(Kanade) 言語の実行機(Interpreter)とランタイム
 
 実行機およびランタイムエラーの詳細な仕様については、以下のハジャ（Haja）のドキュメントを参照してください。
 
-* <strong><a href="https://haja.soumt.moe/docs/tech-spec/3-runtime">Haja 実行機・ランタイム仕様書</a></strong>
+* **[Haja 実行機・ランタイム仕様書](https://haja.soumt.moe/docs/tech-spec/3-runtime)**
