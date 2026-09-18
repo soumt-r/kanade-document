@@ -32,6 +32,14 @@ export interface LangConfig {
   stringReplaceMethod: string;
   stringSplitMethod: string;
   stringContainsMethod: string;
+
+  // equalsMethodName is the magic method evalExpr.ts's BinaryExpression
+  // case looks for on a HajaObject operand of ==/!= (operator overloading).
+  // Mirrors Go's vm/config.go EqualsMethodName — was hardcoded to Korean
+  // "기호 같다" regardless of language until a real kanade-docs example
+  // (oop/1-classes.md's 〈記号 同じだ〉) was found to never match.
+  equalsMethodName: string;
+
   parseEmbeddedExpr?: (code: string) => Expression;
 }
 
@@ -77,4 +85,7 @@ export const JapaneseConfig: LangConfig = {
   stringReplaceMethod: "入れ替え",
   stringSplitMethod: "分割",
   stringContainsMethod: "含むか確認",
+  // kanade-docs/src/pages/docs/oop/1-classes.md's actual method name
+  // (〈記号 同じだ〉, delimiters stripped).
+  equalsMethodName: "記号 同じだ",
 };

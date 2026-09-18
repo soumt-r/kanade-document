@@ -558,7 +558,7 @@ export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | 
           const cls = i.classes[left.className];
           let funcDecl: ast.FunctionDeclaration | null = null;
           for (const stmt of cls.body) {
-            if (stmt.type === "FunctionDeclaration" && stmt.name.value === "기호 같다") {
+            if (stmt.type === "FunctionDeclaration" && stmt.name.value === i.config.equalsMethodName) {
               funcDecl = stmt;
               break;
             }
