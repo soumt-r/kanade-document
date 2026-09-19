@@ -193,6 +193,10 @@ const EXTRA_CASES: { name: string; code: string; stdin?: string }[] = [
     { name: "표준: 인코딩: 16진수 아닌 주소", code: "【エンコード】から〈URLデコード〉を持ってこよう\n〈URLデコード〉(「%zz」)を出力しよう\n" },
     { name: "표준: 해시: SHA256", code: "【ハッシュ】から〈SHA256〉を持ってこよう\n〈SHA256〉(「」)を出力しよう\n〈SHA256〉(「abc」)を出力しよう\n〈SHA256〉(「日本」)を出力しよう\n〈SHA256〉(「aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa」)を出力しよう\n" },
     { name: "표준: 고유번호 모양", code: "【乱数】から〈UUID〉を持ってこよう\n【正規表現】から〈検査〉を持ってこよう\n〈検査〉(〈UUID〉(), 「^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$」)を出力しよう\n" },
+    { name: "표준: 기다리기", code: "【日時】から〈待つ〉を持ってこよう\n〈待つ〉(0.05)を実行しよう\n「終」を出力しよう" },
+    { name: "표준: 기다리기 음수", code: "【日時】から〈待つ〉を持ってこよう\n〈待つ〉((0 - 1))を実行しよう" },
+    { name: "표준: 기다리기 너무 김", code: "【日時】から〈待つ〉を持ってこよう\n〈待つ〉(3601)を実行しよう" },
+    { name: "표준: 기다리기 인자 종류", code: "【日時】から〈待つ〉を持ってこよう\n〈待つ〉(「少し」)を実行しよう" },
 ];
 
 // 구문 오류 문구: TS 엔진의 진단을 현지화한 문장이 hana가 보여 주는 문장과 같아야 한다.

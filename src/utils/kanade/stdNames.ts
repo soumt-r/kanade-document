@@ -48,6 +48,7 @@ export const stdModules = [
       { id: "datetime.format", name: "書式" },
       { id: "datetime.parse", name: "読み取り" },
       { id: "datetime.weekday", name: "曜日" },
+      { id: "datetime.sleep", name: "待つ" },
     ],
   },
   {

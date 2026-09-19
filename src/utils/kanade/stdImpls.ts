@@ -255,6 +255,14 @@ function datetimeWeekday(...args: unknown[]): unknown {
   return day === 0 ? 7 : day;
 }
 
+// Waits without blocking the page: the engine awaits native calls, so this returns a promise.
+function datetimeSleep(...args: unknown[]): unknown {
+  exactly(args, 1);
+  const seconds = numberArg(args, 0);
+  if (Number.isNaN(seconds) || seconds < 0 || seconds > 3600) throw new RuntimeError(Codes.SleepRange);
+  return new Promise((resolve) => setTimeout(() => resolve(null), seconds * 1000));
+}
+
 // ---- regex
 
 // A leading (?ims) group sets flags, like Go's syntax; the rest is the JS pattern.
@@ -801,6 +809,7 @@ export const nativeImpls: Record<string, Impl> = {
   "datetime.format": datetimeFormat,
   "datetime.parse": datetimeParse,
   "datetime.weekday": datetimeWeekday,
+  "datetime.sleep": datetimeSleep,
 
   "math.sqrt": oneNumber(Math.sqrt),
   "math.pow": mathPow,
