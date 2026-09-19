@@ -11,20 +11,7 @@ import { BuiltinFunction, type NativeModule } from "./object";
 import type { KanadeInterpreter } from "./interpreter";
 import { RuntimeError, Codes } from "./errs";
 import { stdModules } from "./stdNames";
-
-// Implementations of hana/std's native functions, keyed by language-neutral ID.
-function numberFunc(f: (n: number) => number): (...args: unknown[]) => unknown {
-  return (...args) => {
-    if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
-    if (typeof args[0] !== "number") throw new RuntimeError(Codes.NotANumber);
-    return f(args[0]);
-  };
-}
-
-const nativeImpls: Record<string, (...args: unknown[]) => unknown> = {
-  "math.ceil": numberFunc(Math.ceil),
-  "math.floor": numberFunc(Math.floor),
-};
+import { nativeImpls } from "./stdImpls";
 
 export function registerStandardLibrary(i: KanadeInterpreter): void {
   const cfg = i.config;

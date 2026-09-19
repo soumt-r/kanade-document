@@ -10,4 +10,43 @@ export const stdModules = [
       { id: "math.floor", name: "切り捨て" },
     ],
   },
+  {
+    id: "json",
+    name: "JSON",
+    functions: [
+      { id: "json.parse", name: "パース" },
+      { id: "json.stringify", name: "文字列化" },
+    ],
+  },
+  {
+    id: "random",
+    name: "乱数",
+    functions: [
+      { id: "random.float", name: "実数" },
+      { id: "random.int", name: "整数" },
+      { id: "random.choice", name: "選ぶ" },
+      { id: "random.shuffle", name: "シャッフル" },
+    ],
+  },
+  {
+    id: "datetime",
+    name: "日時",
+    functions: [
+      { id: "datetime.now", name: "今" },
+      { id: "datetime.format", name: "書式" },
+      { id: "datetime.parse", name: "読み取り" },
+    ],
+  },
+  {
+    id: "regex",
+    name: "正規表現",
+    functions: [
+      { id: "regex.test", name: "検査" },
+      { id: "regex.find", name: "検索" },
+      { id: "regex.groups", name: "グループ" },
+      { id: "regex.findall", name: "全検索" },
+      { id: "regex.replace", name: "置換" },
+      { id: "regex.split", name: "分割" },
+    ],
+  },
 ] as const;
