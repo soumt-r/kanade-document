@@ -246,6 +246,15 @@ function datetimeParse(...args: unknown[]): unknown {
   return Math.floor(t.getTime() / 1000);
 }
 
+// 1 for Monday through 7 for Sunday.
+function datetimeWeekday(...args: unknown[]): unknown {
+  exactly(args, 1);
+  const seconds = numberArg(args, 0);
+  if (!Number.isFinite(seconds) || Math.abs(seconds) > 8.64e12) throw new RuntimeError(Codes.NativeArgNumber, 1);
+  const day = new Date(Math.floor(seconds) * 1000).getDay();
+  return day === 0 ? 7 : day;
+}
+
 // ---- regex
 
 // A leading (?ims) group sets flags, like Go's syntax; the rest is the JS pattern.
@@ -378,6 +387,7 @@ export const nativeImpls: Record<string, Impl> = {
   "datetime.now": datetimeNow,
   "datetime.format": datetimeFormat,
   "datetime.parse": datetimeParse,
+  "datetime.weekday": datetimeWeekday,
 
   "regex.test": regexTest,
   "regex.find": regexFind,

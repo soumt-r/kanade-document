@@ -35,6 +35,7 @@ export const stdModules = [
       { id: "datetime.now", name: "今" },
       { id: "datetime.format", name: "書式" },
       { id: "datetime.parse", name: "読み取り" },
+      { id: "datetime.weekday", name: "曜日" },
     ],
   },
   {
