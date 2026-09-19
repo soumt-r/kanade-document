@@ -3,71 +3,62 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="カナデ (Kanade) 言語" customMaxWidth="max-w-5xl">
-  <div class="py-20 flex flex-col lg:flex-row items-center gap-16">
-    <div class="flex-1 flex flex-col items-start gap-8">
-      <h1 class="text-5xl sm:text-6xl font-bold tracking-tighter leading-tight text-black">
-        日本語で始める<br />
-        <span class="text-zinc-400">プログラミング</span>
+  <section class="pt-14 pb-24 grid gap-14 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+    <div>
+      <h1 class="font-display font-extrabold text-5xl sm:text-6xl leading-[1.2]" style="letter-spacing:-0.04em">
+        日本語で始める<br /><span class="text-gradient">プログラミング</span>
       </h1>
-      
-      <a href="https://haja.soumt.moe" target="_blank" class="inline-flex items-center gap-2 mt-6 text-sm text-zinc-500 hover:text-black transition-colors group">
-        <img src="/haja-logo.svg" class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" alt="Haja" />
-        <span>韓国語プログラミング言語「Haja」公式日本語版 <span class="text-zinc-300 group-hover:text-zinc-500 transition-colors">→</span></span>
+
+      <a href="https://haja.soumt.moe" target="_blank" rel="noopener" class="inline-flex items-center gap-2 mt-8 text-sm text-ink-soft hover:text-ink transition-colors group">
+        <img src="/haja-logo.svg" class="w-5 h-5 rounded" alt="Haja" />
+        <span>韓国語プログラミング言語「Haja」公式日本語版 <span class="text-ink-faint group-hover:text-verb transition-colors">→</span></span>
       </a>
-      
-      <p class="text-xl text-zinc-600 leading-relaxed max-w-2xl mt-4 font-light">
+
+      <p class="mt-7 text-lg text-ink-soft leading-relaxed max-w-lg">
         英語が苦手でも、誰でも簡単にコードを読み書きできます。<br />
         英語、もう見なくていいですでオブジェクト指向プログラミングを始めましょう。
       </p>
 
-      <div class="flex flex-col gap-4 mt-8 items-start">
-        <div class="flex flex-wrap gap-4">
-          <a href="/docs/intro" class="bg-black text-white px-8 py-3.5 rounded-full font-medium hover:bg-zinc-800 transition-colors shadow-lg">
-            始める
-          </a>
-          <a href="/docs/tutorial/1-variables" class="bg-white border border-zinc-200 text-zinc-800 px-8 py-3.5 rounded-full font-medium hover:bg-zinc-50 transition-colors shadow-sm">
-            文法を見る
-          </a>
-        </div>
-        <a href="/playground" class="bg-blue-600 text-white px-8 py-3.5 rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg">
-          プレイグラウンドで試す
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-4 mt-10">
+        <a href="/docs/intro" class="bg-ink text-white px-7 py-3.5 font-semibold rounded-xl hover:bg-verb transition-colors">
+          始める
+        </a>
+        <a href="/docs/tutorial/1-variables" class="border border-rule px-7 py-3.5 font-semibold rounded-xl hover:border-ink transition-colors">
+          文法を見る
+        </a>
+        <a href="/playground" class="font-semibold text-ink hover:text-verb transition-colors px-2">
+          プレイグラウンドで試す →
         </a>
       </div>
     </div>
 
-    <div class="flex-1 w-full relative h-[380px] hidden sm:block">
-      <!-- Haja Code Block (Background) -->
-      <div class="absolute top-0 left-0 w-[85%] bg-white border border-zinc-200 shadow-xl rounded-xl overflow-hidden transform -rotate-3 hover:rotate-0 hover:z-30 transition-all duration-300 z-10 opacity-90">
-        <div class="bg-zinc-100 border-b border-zinc-200 px-4 py-2.5 flex items-center gap-2">
-          <img src="/haja-logo.svg" alt="Haja" class="w-4 h-4 opacity-70" />
-          <span class="text-[11px] font-bold text-zinc-500 tracking-widest">HAJA (韓国語)</span>
-        </div>
-        <pre class="p-6 text-[13px] leading-loose font-mono text-zinc-700 overflow-x-auto bg-[#fafafa]"><code><span class="text-purple-600">&lt;인사하기&gt;</span>를 만들자 (<span class="text-amber-600">[문자열]</span>인 <span class="text-blue-600">'이름'</span>):
-    틀<span class="text-emerald-600">"안녕, &#123;<span class="text-blue-600">'이름'</span>&#125;!"</span>을 출력하자
+    <!-- 同じプログラムを、韓国語(Haja)と日本語(Kanade)で。 -->
+    <div class="flex flex-col items-stretch gap-3" aria-label="HajaとKanadeのコード比較">
+      <figure class="hj-panel">
+        <figcaption class="hj-panel-head">
+          <span class="inline-flex items-center gap-2"><img src="/haja-logo.svg" alt="" class="w-4 h-4 rounded-sm" />Haja</span>
+          <span>韓国語</span>
+        </figcaption>
+        <pre class="p-5 sm:p-6 text-[13px] leading-[2] font-mono overflow-x-auto m-0"><code><span class="tk-fn">&lt;인사하기&gt;</span><span class="tk-par">를</span> <span class="tk-verb">만들자</span> (<span class="tk-type">[문자열]</span><span class="tk-par">인</span> <span class="tk-var">'이름'</span>):
+    <span class="tk-str">틀"안녕, &#123;</span><span class="tk-var">'이름'</span><span class="tk-str">&#125;!"</span><span class="tk-par">을</span> <span class="tk-verb">출력하자</span>
 
-<span class="text-purple-600">&lt;인사하기&gt;</span>(<span class="text-emerald-600">"카나데"</span>)를 실행하자</code></pre>
+<span class="tk-fn">&lt;인사하기&gt;</span>(<span class="tk-str">"카나데"</span>)<span class="tk-par">를</span> <span class="tk-verb">실행하자</span></code></pre>
+      </figure>
+
+      <div class="flex justify-center text-ink-faint" aria-hidden="true">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l-6-6m6 6l6-6" /></svg>
       </div>
 
-      
-      <!-- Connecting Arrow -->
-      <div class="absolute top-[52%] left-[45%] -translate-x-1/2 -translate-y-1/2 z-[15] bg-white border border-zinc-200 rounded-full p-2.5 shadow-lg text-zinc-400 transform hover:scale-110 hover:text-blue-500 hover:-rotate-12 transition-all duration-300 hidden sm:flex items-center justify-center">
-        <svg class="w-5 h-5 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-      </div>
+      <figure class="hj-panel hj-out" style="border-color:var(--color-ink)">
+        <figcaption class="hj-out-head">
+          <span class="inline-flex items-center gap-2"><img src="/favicon.svg" alt="" class="w-4 h-4 rounded-sm" />Kanade</span>
+          <span class="ml-auto">日本語</span>
+        </figcaption>
+        <pre class="p-5 sm:p-6 text-[13px] leading-[2] font-mono overflow-x-auto m-0"><code><span class="tk-fn">〈挨拶する〉</span><span class="tk-par">を</span><span class="tk-verb">作ろう</span> (<span class="tk-type">【文字列】</span><span class="tk-par">の</span><span class="tk-var">『名前』</span>):
+    <span class="tk-str">枠「こんにちは、&#123;</span><span class="tk-var">『名前』</span><span class="tk-str">&#125;！」</span><span class="tk-par">を</span><span class="tk-verb">出力しよう</span>
 
-      <!-- Kanade Code Block (Foreground) -->
-      <div class="absolute bottom-0 right-0 w-[85%] bg-[#1A1A1A] border border-zinc-800 shadow-2xl rounded-xl overflow-hidden transform rotate-2 hover:rotate-0 hover:scale-[1.02] transition-all duration-300 z-20">
-        <div class="bg-[#2A2A2A] border-b border-zinc-800 px-4 py-2.5 flex items-center gap-2">
-          <img src="/favicon.svg" alt="Kanade" class="w-4 h-4" />
-          <span class="text-[11px] font-bold text-zinc-300 tracking-widest">KANADE (日本語)</span>
-        </div>
-        <pre class="p-6 text-[13px] leading-loose font-mono text-zinc-300 overflow-x-auto"><code><span class="text-pink-400">〈挨拶する〉</span>を作ろう (<span class="text-yellow-200">【文字列】</span>の<span class="text-blue-300">『名前』</span>):
-    枠<span class="text-green-300">「こんにちは、&#123;<span class="text-blue-300">『名前』</span>&#125;！」</span>を出力しよう
-
-<span class="text-pink-400">〈挨拶する〉</span>(<span class="text-green-300">「カナデ」</span>)を実行しよう</code></pre>
-      </div>
+<span class="tk-fn">〈挨拶する〉</span>(<span class="tk-str">「カナデ」</span>)<span class="tk-par">を</span><span class="tk-verb">実行しよう</span></code></pre>
+      </figure>
     </div>
-  </div>
-
-  </Layout>
+  </section>
+</Layout>

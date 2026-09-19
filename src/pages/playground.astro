@@ -4,42 +4,29 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="プレイグラウンド | カナデ(Kanade) 言語" customMaxWidth="max-w-[1400px]">
   <div class="w-full flex flex-col h-[calc(100vh-220px)] mt-[-20px]">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold tracking-tight">プレイグラウンド (Playground)</h1>
-      <button 
-        id="run-btn"
-        class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
-      >
+    <div class="flex items-end justify-between mb-5">
+      <div>
+        <p class="font-mono text-xs tracking-[0.25em] text-ink-faint uppercase mb-2">Playground</p>
+        <h1 class="text-3xl font-extrabold tracking-tight">プレイグラウンド</h1>
+      </div>
+      <button id="run-btn" class="hj-run solid !text-sm !px-6 !py-2.5 flex items-center gap-2">
         <span id="run-text">実行する</span>
-        <svg id="run-spinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <svg id="run-spinner" class="hidden animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       </button>
     </div>
 
-    <div class="flex flex-col md:flex-row gap-6 flex-grow min-h-0">
+    <div class="flex flex-col md:flex-row gap-5 flex-grow min-h-0">
       <!-- Editor -->
-      <div class="flex-1 flex flex-col min-h-0 shadow-lg rounded-xl border border-zinc-200 bg-white overflow-hidden">
-        <div class="bg-zinc-50 border-b border-zinc-200 px-4 py-3 flex items-center gap-2">
-          <div class="w-3 h-3 rounded-full bg-red-400"></div>
-          <div class="w-3 h-3 rounded-full bg-amber-400"></div>
-          <div class="w-3 h-3 rounded-full bg-green-400"></div>
-          <span class="ml-2 text-xs font-semibold text-zinc-400 font-mono">main.knd</span>
-        </div>
-        <div 
-          id="editor-container" 
-          class="flex-grow w-full overflow-hidden flex flex-col"
-        ></div>
+      <div class="hj-panel flex-1 min-h-0">
+        <div class="hj-panel-head"><span class="hj-tag">main.knd</span></div>
+        <div id="editor-container" class="flex-grow w-full overflow-hidden flex flex-col"></div>
       </div>
 
       <!-- Output -->
-      <div class="flex-1 flex flex-col min-h-0 shadow-lg rounded-xl border border-zinc-800 bg-[#1E1E1E] overflow-hidden">
-        <div class="bg-[#2D2D2D] border-b border-zinc-700 px-4 py-3 flex items-center gap-2">
-          <div class="w-3 h-3 rounded-full bg-zinc-500"></div>
-          <div class="w-3 h-3 rounded-full bg-zinc-500"></div>
-          <div class="w-3 h-3 rounded-full bg-zinc-500"></div>
-          <span class="ml-2 text-xs font-semibold text-zinc-400 font-mono">Terminal - Kanade Runtime</span>
-        </div>
+      <div class="hj-out flex-1 flex flex-col min-h-0 overflow-hidden" style="border-radius:10px">
+        <div class="hj-out-head">結果</div>
         <div class="flex-grow w-full p-4 overflow-y-auto relative">
-          <pre id="output" class="font-mono text-[14.5px] text-zinc-300 whitespace-pre-wrap leading-relaxed"></pre>
+          <pre id="output" class="text-[14.5px] whitespace-pre-wrap"></pre>
         </div>
       </div>
     </div>
@@ -49,7 +36,8 @@ import Layout from '../layouts/Layout.astro';
     import { runKanade } from '../utils/kanade';
     import { EditorView, basicSetup } from "codemirror";
     import { kanadeLanguage } from '../utils/kanade/cm-language';
-    import { kanadeLinter, kanadeAutocomplete } from '../utils/kanade/kanadeLSP';
+    import { kanadeTheme } from '../utils/kanade/cmTheme';
+      import { kanadeLinter, kanadeAutocomplete } from '../utils/kanade/kanadeLSP';
 
     const defaultCode = `枠「こんにちは、世界！」を出力しよう`;
 
@@ -69,12 +57,7 @@ import Layout from '../layouts/Layout.astro';
             kanadeLinter,
             kanadeAutocomplete,
           EditorView.lineWrapping,
-          EditorView.theme({
-            "&": { height: "100%", fontSize: "15.5px" },
-            "&.cm-focused": { outline: "none" },
-            ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", overflow: "auto" },
-            ".cm-gutters": { backgroundColor: "#fbfbfb", borderRight: "1px solid #f0f0f0", color: "#999" }
-          })
+          kanadeTheme({ height: "100%", fontSize: "15.5px" })
         ],
         parent: document.getElementById("editor-container")!
       });
@@ -103,14 +86,14 @@ import Layout from '../layouts/Layout.astro';
               if (!output) { resolve(""); return; }
               const promptSpan = document.createElement("span");
               promptSpan.innerText = promptText;
-              promptSpan.className = "text-yellow-400";
+              promptSpan.className = "hj-prompt";
               
               const inputWrapper = document.createElement("span");
               inputWrapper.className = "relative inline-block ml-2";
               
               const inputEl = document.createElement("input");
               inputEl.type = "text";
-              inputEl.className = "bg-transparent border-b border-yellow-400/50 outline-none text-white w-64 focus:border-yellow-400 transition-all";
+              inputEl.className = "hj-input";
               inputEl.autocomplete = "off";
               
               inputWrapper.appendChild(inputEl);
@@ -141,7 +124,7 @@ import Layout from '../layouts/Layout.astro';
           
           // Only show default message if literally nothing was printed via outputCallback OR return
           if (!printedSomething && !result) {
-            if (output) output.innerText += '\n(あれ、出力された結果がありません。 "出力しよう"」を使ってみてください.)';
+            if (output) output.innerText += '\n(あっ、出力された結果がありません。「出力しよう」を使ってみてください。)';
           }
         } catch (err) {
           if (output) output.innerText += "\n" + String(err);

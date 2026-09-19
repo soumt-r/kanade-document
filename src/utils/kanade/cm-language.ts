@@ -23,7 +23,7 @@ const kanadeParser: StreamParser<unknown> = {
     if (stream.match(operatorRegex)) return "operator";
 
     const particles = /^(から|へ|より|くらい|を|に|で|は|が|の|と|も)/;
-    if (stream.match(particles)) return "propertyName"; 
+    if (stream.match(particles)) return "meta";
 
     const booleanNull = /^(真|偽|空っぽ)/;
     if (stream.match(booleanNull)) return "bool";

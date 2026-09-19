@@ -1,37 +1,273 @@
 @import "tailwindcss";
 
+/*
+  하자 디자인 토큰.
+  순백 바탕 + 로고의 먹색(#13131A). 색은 로고의 그라데이션(보라 → 마젠타 → 주황)에서
+  뽑은 두 가지만 쓴다: 서술어(-しよう)는 보라, 조사(を/に/の)는 주황.
+  그라데이션 자체는 로고, 제목의 "하자.", 가는 표지선에만 쓴다.
+*/
+@theme {
+  --color-ink: #13131a;
+  --color-ink-soft: #4b4b57;
+  --color-ink-faint: #8b8b99;
+  --color-rule: #e8e8ee;
+  --color-wash: #f6f6f9;
+  --color-verb: #8e2de2;
+  --color-verb-deep: #7420be;
+  --color-verb-wash: #f1e6fc;
+  --color-particle: #e8431f;
+
+  --font-display: "Pretendard JP", "Pretendard", system-ui, sans-serif;
+  --font-sans: "Pretendard JP", "Pretendard", system-ui, sans-serif;
+  --font-mono: "D2Coding", "D2Coding ligature", ui-monospace, "Cascadia Mono", monospace;
+}
+
+:root {
+  --gradient-haja: linear-gradient(115deg, #8e2de2 0%, #f000ff 55%, #ff5e3a 100%);
+}
+
 @layer base {
+  html {
+    background: #fff;
+  }
+  body {
+    /* 일본어는 keep-all을 쓰면 줄바꿈 지점이 사라진다: 금칙 처리(strict)만 켠다. */
+    line-break: strict;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background: #fff;
+  }
+  pre, code, textarea, .cm-editor {
+    word-break: normal;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule) transparent;
+  }
+  ::selection {
+    background: var(--color-verb);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-verb);
+    outline-offset: 2px;
+  }
+
   .prose {
-    @apply text-zinc-800 leading-relaxed;
+    color: var(--color-ink);
+    line-height: 1.85;
   }
   .prose h1 {
-    @apply text-3xl font-bold mb-6 mt-10 tracking-tight;
+    @apply text-4xl font-extrabold mb-6 mt-10 leading-tight;
+    letter-spacing: -0.03em;
   }
   .prose h2 {
-    @apply text-2xl font-bold mb-4 mt-12 pb-2 border-b border-zinc-200 tracking-tight;
+    @apply text-2xl font-bold mb-5 mt-16 leading-snug flex items-baseline gap-3;
+    letter-spacing: -0.02em;
+  }
+  /* 소제목 앞의 작은 그라데이션 획: 문서를 읽어 내려가는 눈의 표지. */
+  .prose h2::before {
+    content: "";
+    flex: none;
+    width: 1rem;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--gradient-haja);
+    transform: translateY(-0.28em);
   }
   .prose h3 {
-    @apply text-lg font-semibold mb-3 mt-8;
+    @apply text-lg font-bold mb-3 mt-10;
+    letter-spacing: -0.01em;
   }
   .prose p {
-    @apply mb-6 leading-loose text-zinc-700;
+    @apply mb-6;
+    color: var(--color-ink-soft);
+  }
+  .prose strong {
+    color: var(--color-ink);
+    @apply font-semibold;
   }
   .prose ul {
-    @apply list-disc list-outside ml-6 mb-6 text-zinc-700 flex flex-col gap-2;
+    @apply list-disc list-outside ml-6 mb-6 flex flex-col gap-2;
+    color: var(--color-ink-soft);
+  }
+  .prose ul li::marker {
+    color: var(--color-verb);
+  }
+  .prose ol {
+    @apply list-decimal list-outside ml-6 mb-6 flex flex-col gap-2;
+    color: var(--color-ink-soft);
+  }
+  .prose ol li::marker {
+    color: var(--color-ink-faint);
+    font-family: var(--font-mono);
   }
   .prose pre {
-    @apply bg-zinc-900 text-zinc-100 p-5 rounded-xl text-sm mb-6 overflow-x-auto;
+    font-family: var(--font-mono);
+    background: var(--color-ink);
+    color: #f1f1f5;
+    @apply p-5 text-sm mb-6 overflow-x-auto rounded-lg;
   }
   .prose code {
-    @apply bg-zinc-100 text-zinc-900 px-1.5 py-0.5 rounded font-mono text-sm;
+    font-family: var(--font-mono);
+    background: var(--color-wash);
+    color: var(--color-ink);
+    @apply px-1.5 py-0.5 text-[0.88em] rounded;
   }
   .prose pre code {
-    @apply bg-transparent text-inherit p-0 rounded-none;
+    @apply bg-transparent text-inherit p-0;
   }
   .prose blockquote {
-    @apply border-l-4 border-zinc-300 pl-4 italic text-zinc-600 mb-6;
+    @apply pl-5 mb-6;
+    border-left: 3px solid var(--color-verb);
+    color: var(--color-ink-soft);
+  }
+  .prose hr {
+    border-color: var(--color-rule);
+    @apply my-12;
   }
   .prose a {
-    @apply text-blue-600 hover:underline underline-offset-4 decoration-blue-300;
+    color: var(--color-verb-deep);
+    text-decoration: underline;
+    text-decoration-color: #d9bdf5;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.15s;
   }
+  .prose a:hover {
+    text-decoration-color: var(--color-verb);
+  }
+  .prose table {
+    @apply w-full mb-8 text-sm border-collapse;
+  }
+  .prose th {
+    @apply text-left font-semibold py-2 pr-4;
+    border-bottom: 2px solid var(--color-ink);
+  }
+  .prose td {
+    @apply py-2 pr-4;
+    border-bottom: 1px solid var(--color-rule);
+    color: var(--color-ink-soft);
+  }
+}
+
+@layer components {
+  .text-gradient {
+    background: var(--gradient-haja);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* 예제·놀이터 패널: 편집기(흰색) + 결과(로고의 먹색) 한 쌍. */
+  .hj-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    background: #fff;
+    border-radius: 10px;
+  }
+  .hj-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0.9rem;
+    border-bottom: 1px solid var(--color-rule);
+    background: var(--color-wash);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-ink-soft);
+  }
+  .hj-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .hj-tag::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--gradient-haja);
+  }
+  .hj-run {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--color-rule);
+    background: #fff;
+    color: var(--color-ink);
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .hj-run:hover {
+    border-color: var(--color-ink);
+  }
+  .hj-run.solid {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+    color: #fff;
+  }
+  .hj-run.solid:hover {
+    background: var(--color-verb);
+    border-color: var(--color-verb);
+  }
+  .hj-out {
+    background: var(--color-ink);
+    color: #ececf2;
+    font-family: var(--font-mono);
+    line-height: 1.8;
+  }
+  .hj-out-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    border-bottom: 1px solid #2a2a35;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: #8b8b99;
+  }
+  .hj-out-head::before {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: #8b8b99;
+  }
+  .hj-prompt {
+    color: #ff8a6b;
+  }
+  .hj-input {
+    width: 16rem;
+    background: transparent;
+    outline: none;
+    color: inherit;
+    border-bottom: 1px solid #ff8a6b80;
+    transition: border-color 0.15s;
+  }
+  .hj-input:focus {
+    border-bottom-color: #ff8a6b;
+  }
+}
+
+/* 랜딩의 코드 비교 카드용 토큰 색. 어두운 패널(.hj-out) 안에서는 밝은 변형을 쓴다. */
+@layer components {
+  .tk-com { color: var(--color-ink-faint); }
+  .tk-var { color: var(--color-ink); }
+  .tk-par { color: var(--color-particle); }
+  .tk-verb { color: var(--color-verb); font-weight: 700; }
+  .tk-fn { color: #b0189e; }
+  .tk-type { color: #4c5bd4; }
+  .tk-str { color: #0e7c66; }
+  .hj-out .tk-var { color: #ececf2; }
+  .hj-out .tk-par { color: #ff8a6b; }
+  .hj-out .tk-verb { color: #c78bff; }
+  .hj-out .tk-fn { color: #ff7ad9; }
+  .hj-out .tk-type { color: #8f9bff; }
+  .hj-out .tk-str { color: #5fd6b3; }
 }

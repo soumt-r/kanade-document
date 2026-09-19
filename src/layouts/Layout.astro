@@ -7,6 +7,12 @@ interface Props {
 }
 
 const { title, customMaxWidth = "max-w-3xl" } = Astro.props;
+const path = Astro.url.pathname;
+const width = customMaxWidth === 'max-w-3xl' && path === '/' ? 'max-w-5xl' : customMaxWidth;
+const navItems = [
+  { text: 'ドキュメント', href: '/docs/intro', active: path.startsWith('/docs') },
+  { text: 'GitHub', href: 'https://github.com/soumt-r/kanade-document', external: true, active: false },
+];
 ---
 
 <!doctype html>
@@ -17,28 +23,53 @@ const { title, customMaxWidth = "max-w-3xl" } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    <!-- Pretendard Web Font -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-jp.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/joungkyun/font-d2coding@1.3.2/d2coding.css" />
   </head>
-  <body class="bg-[#FAFAFA] text-zinc-900 font-['Pretendard'] antialiased selection:bg-black selection:text-white min-h-screen flex flex-col">
-    <header class={`w-full max-w-5xl mx-auto px-6 py-12 flex items-center justify-between`}>
-      <a href="/" class="flex items-center gap-2 text-xl font-bold tracking-tight hover:opacity-70 transition-opacity">
-          <img src="/favicon.svg" alt="Kanade Logo" class="w-7 h-7" />
-          <span>カナデ <span class="font-light text-zinc-400">Kanade</span></span>
+  <body class="antialiased min-h-screen flex flex-col">
+    <header class="w-full border-b border-rule">
+      <div class={`${width} mx-auto px-6 h-16 flex items-center justify-between`}>
+        <a href="/" class="flex items-center gap-2.5" aria-label="カナデ ホーム">
+          <img src="/favicon.svg" alt="" class="w-8 h-8" />
+          <span class="text-xl font-extrabold tracking-tight">カナデ</span>
+          <span class="text-sm font-medium text-ink-faint tracking-tight pt-0.5">Kanade</span>
         </a>
-      <nav class="flex gap-6 text-sm font-medium text-zinc-500">
-        <!-- <a href="/playground" class="hover:text-black transition-colors font-semibold text-blue-600">プレイグラウンド</a> -->
-        <a href="/docs/intro" class="hover:text-black transition-colors">ドキュメント</a>
-        <a href="https://github.com/soumt-r/kanade-document" target="_blank" class="hover:text-black transition-colors">GitHub</a>
-      </nav>
+        <nav class="flex items-center gap-7 text-sm">
+          {navItems.map((item) => (
+            <a
+              href={item.href}
+              target={item.external ? '_blank' : undefined}
+              rel={item.external ? 'noopener' : undefined}
+              class={`relative py-1 transition-colors ${item.active ? 'text-ink font-semibold nav-on' : 'text-ink-soft hover:text-ink'}`}
+            >
+              {item.text}
+            </a>
+          ))}
+        </nav>
+      </div>
     </header>
-    
-    <main class={`flex-grow w-full ${customMaxWidth === 'max-w-3xl' && Astro.url.pathname === '/' ? 'max-w-5xl' : customMaxWidth} mx-auto px-6 py-10 flex flex-col`}>
+
+    <main class={`flex-grow w-full ${width} mx-auto px-6 py-10 flex flex-col`}>
       <slot />
     </main>
 
-    <footer class={`w-full max-w-5xl mx-auto px-6 py-12 text-sm text-zinc-400 border-t border-zinc-200 mt-20`}>
-      <p>日本語で始める実用的なオブジェクト指向プログラミング言語、カナデ(Kanade)と一緒に。</p>
+    <footer class="w-full border-t border-rule mt-20">
+      <div class={`${width} mx-auto px-6 py-10 flex flex-wrap items-baseline justify-between gap-4 text-sm text-ink-faint`}>
+        <p>日本語で始める実用的なオブジェクト指向プログラミング言語、<span class="text-ink font-semibold">カナデ</span>(Kanade)と一緒に。</p>
+      </div>
     </footer>
   </body>
 </html>
+
+<style is:global>
+  .nav-on::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--gradient-haja);
+  }
+</style>

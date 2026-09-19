@@ -45,21 +45,22 @@ const navItems = [
 ];
 ---
 
-<Layout title={`${frontmatter.title} | カナデ(Kanade) 言語`}>
-  <div class="flex flex-col md:flex-row gap-12 mt-10">
-    <aside class="w-full md:w-48 shrink-0 border-b md:border-b-0 border-zinc-200 pb-8 md:pb-0">
-      <div class="sticky top-12 space-y-8">
+<Layout title={`${frontmatter.title} | カナデ(Kanade) 言語`} customMaxWidth="max-w-6xl">
+  <div class="flex flex-col md:flex-row gap-12 lg:gap-16 mt-6">
+    <aside class="w-full md:w-56 shrink-0 border-b md:border-b-0 border-rule pb-8 md:pb-0">
+      <nav class="md:sticky md:top-10 md:max-h-[calc(100vh-5rem)] md:overflow-y-auto space-y-9 md:pr-2" aria-label="目次">
         {navItems.map((section) => (
           <div>
-            <h4 class="font-bold text-black mb-3 text-sm tracking-tight">{section.title}</h4>
-            <ul class="space-y-2.5">
+            <h4 class="font-display font-bold text-ink mb-3 text-[15px]">{section.title}</h4>
+            <ul class="border-l border-rule">
               {section.links.map((link) => {
                 const isActive = Astro.url.pathname === link.href || Astro.url.pathname === link.href + '/';
                 return (
                   <li>
-                    <a 
-                      href={link.href} 
-                      class={`text-sm block transition-colors ${isActive ? 'text-black font-semibold' : 'text-zinc-500 hover:text-black'}`}
+                    <a
+                      href={link.href}
+                      aria-current={isActive ? 'page' : undefined}
+                      class={`block text-sm py-1.5 pl-4 -ml-px border-l-2 transition-colors ${isActive ? 'border-verb text-ink font-semibold' : 'border-transparent text-ink-soft hover:text-ink hover:border-ink-faint'}`}
                     >
                       {link.text}
                     </a>
@@ -70,37 +71,32 @@ const navItems = [
           </div>
         ))}
 
-        <button 
-          id="open-side-playground"
-          class="w-full mt-6 bg-zinc-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 shadow-sm"
-        >
+        <button id="open-side-playground" class="hj-run solid w-full py-2.5">
           直接実行してみる
         </button>
-      </div>
+      </nav>
     </aside>
-    
-    <article class="prose max-w-none flex-grow pb-24 doc-article">
+
+    <article class="prose max-w-none flex-grow min-w-0 pb-24 doc-article">
       <h1 class="!mt-0">{frontmatter.title}</h1>
-      <p class="text-xl text-zinc-500 font-light !mb-12 !mt-0 leading-relaxed border-b border-zinc-100 pb-12">{frontmatter.description}</p>
+      <p class="text-xl text-ink-soft !mb-12 !mt-0 leading-relaxed border-b border-rule pb-10">{frontmatter.description}</p>
       <slot />
     </article>
   </div>
 
   <!-- Side Playground Overlay -->
-  <div id="side-playground-drawer" class="fixed top-0 right-0 w-0 h-full bg-white border-l border-zinc-200 z-40 transition-all duration-300 flex flex-col shadow-2xl overflow-hidden">
-    <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 bg-zinc-50 shrink-0">
-      <h3 class="font-bold text-sm">プレイグラウンド (Playground)</h3>
+  <div id="side-playground-drawer" class="fixed top-0 right-0 w-0 h-full bg-white border-l border-rule z-40 transition-all duration-300 flex flex-col overflow-hidden">
+    <div class="hj-panel-head shrink-0 !py-2.5" style="border-radius:0">
+      <span class="hj-tag font-semibold text-ink">プレイグラウンド</span>
       <div class="flex gap-2">
-        <button id="side-run-btn" class="text-xs bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 font-semibold transition-colors">実行</button>
-        <button id="side-close-btn" class="text-xs bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded hover:bg-zinc-300 font-semibold transition-colors">閉じる</button>
+        <button id="side-run-btn" class="hj-run solid">実行</button>
+        <button id="side-close-btn" class="hj-run">閉じる</button>
       </div>
     </div>
-    <div id="side-editor" class="flex-grow w-full overflow-hidden flex flex-col min-h-0 bg-white"></div>
-    <div class="h-[40%] bg-[#1E1E1E] flex flex-col shrink-0 border-t border-zinc-800">
-      <div class="bg-[#2D2D2D] px-4 py-1.5 border-b border-zinc-700 text-xs font-semibold text-zinc-400 font-mono flex items-center gap-2 shrink-0">
-        <div class="w-2 h-2 rounded-full bg-zinc-500"></div>ターミナル
-      </div>
-      <pre id="side-output" class="p-4 text-[13.5px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed overflow-y-auto flex-grow m-0">コードを書いて「実行」ボタンを押してください。</pre>
+    <div id="side-editor" class="flex-grow w-full overflow-hidden flex flex-col min-h-0"></div>
+    <div class="hj-out h-[40%] flex flex-col shrink-0">
+      <div class="hj-out-head shrink-0">結果</div>
+      <pre id="side-output" class="p-4 text-[13.5px] whitespace-pre-wrap overflow-y-auto flex-grow m-0">コードを書いて「実行」ボタンを押してください。</pre>
     </div>
   </div>
 
@@ -108,6 +104,7 @@ const navItems = [
     import { runKanade } from '../utils/kanade';
     import { EditorView, basicSetup } from "codemirror";
     import { kanadeLanguage } from '../utils/kanade/cm-language';
+    import { kanadeTheme } from '../utils/kanade/cmTheme';
       import { kanadeLinter, kanadeAutocomplete } from '../utils/kanade/kanadeLSP';
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -117,14 +114,14 @@ const createInputCallback = (outputContainer) => (promptText) => {
     if (!outputContainer) { resolve(""); return; }
     const promptSpan = document.createElement("span");
     promptSpan.innerText = promptText;
-    promptSpan.className = "text-yellow-400";
+    promptSpan.className = "hj-prompt";
     
     const inputWrapper = document.createElement("span");
     inputWrapper.className = "relative inline-block ml-2";
     
     const inputEl = document.createElement("input");
     inputEl.type = "text";
-    inputEl.className = "bg-transparent border-b border-yellow-400/50 outline-none text-current w-64 focus:border-yellow-400 transition-all";
+    inputEl.className = "hj-input";
     inputEl.autocomplete = "off";
     
     inputWrapper.appendChild(inputEl);
@@ -161,7 +158,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
       if (openBtn && closeBtn && drawer && sideEditorContainer) {
         const initSideEditor = () => {
           if (sideEditorView) return;
-          const savedCode = sessionStorage.getItem('haja-playground-code') || "『名前』を【文字列】の「田中」にしよう\n枠「こんにちは、{『名前』}さん！」を出力しよう";
+          const savedCode = sessionStorage.getItem('kanade-playground-code') || "『名前』を【文字列】の「田中」にしよう\n枠「こんにちは、{『名前』}さん！」を出力しよう";
           sideEditorView = new EditorView({
             doc: savedCode,
             extensions: [
@@ -170,15 +167,10 @@ const createInputCallback = (outputContainer) => (promptText) => {
               kanadeLinter,
               kanadeAutocomplete,
               EditorView.lineWrapping,
-              EditorView.theme({
-                "&": { height: "100%", fontSize: "14.5px" },
-                "&.cm-focused": { outline: "none" },
-                ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", overflow: "auto" },
-                ".cm-gutters": { backgroundColor: "#fbfbfb", borderRight: "1px solid #f0f0f0", color: "#999" }
-              }),
+              kanadeTheme({ height: "100%" }),
               EditorView.updateListener.of((v) => {
                 if (v.docChanged) {
-                  sessionStorage.setItem('haja-playground-code', v.state.doc.toString());
+                  sessionStorage.setItem('kanade-playground-code', v.state.doc.toString());
                 }
               })
             ],
@@ -204,21 +196,21 @@ const createInputCallback = (outputContainer) => (promptText) => {
           }
           
           initSideEditor();
-          sessionStorage.setItem('haja-playground-open', 'true');
+          sessionStorage.setItem('kanade-playground-open', 'true');
         };
 
         const closeDrawer = () => {
           drawer.classList.add('w-0');
           drawer.classList.remove('w-full', 'md:w-1/2');
           document.body.style.width = '100%';
-          sessionStorage.setItem('haja-playground-open', 'false');
+          sessionStorage.setItem('kanade-playground-open', 'false');
         };
 
         openBtn.addEventListener('click', () => openDrawer(true));
         closeBtn.addEventListener('click', closeDrawer);
 
         // Check initial state
-        if (sessionStorage.getItem('haja-playground-open') === 'true') {
+        if (sessionStorage.getItem('kanade-playground-open') === 'true') {
           openDrawer(false);
         }
 
@@ -240,7 +232,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
             const code = sideEditorView.state.doc.toString();
             const result = await runKanade(code, createInputCallback(sideOutput), outputCallback);
             if (!printedSomething && !result) {
-               sideOutput.innerText += '\n(あっ、出力された結果がありません. "出力しよう"」を使ってみてください.)';
+               sideOutput.innerText += '\n(あっ、出力された結果がありません。「出力しよう」を使ってみてください。)';
             }
           } catch (err) {
             sideOutput.innerText += "\n" + String(err);
@@ -259,7 +251,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
 
       /* --- Inline Interactive Blocks --- */
       // Find all code blocks inside the article
-      const codeBlocks = document.querySelectorAll('.doc-article pre[data-language="plaintext"], .doc-article pre[data-language="haja"]');
+      const codeBlocks = document.querySelectorAll('.doc-article pre[data-language="plaintext"], .doc-article pre[data-language="kanade"]');
       
       codeBlocks.forEach((pre, index) => {
         // Extract raw text
@@ -274,43 +266,38 @@ const createInputCallback = (outputContainer) => (promptText) => {
 
         // Create container for interactive block
         const container = document.createElement('div');
-        container.className = 'not-prose my-8 shadow-md rounded-xl border border-zinc-200 bg-white overflow-hidden flex flex-col';
-        
+        container.className = 'not-prose hj-panel my-8';
+
         // Header
         const header = document.createElement('div');
-        header.className = 'bg-zinc-50 border-b border-zinc-200 px-4 py-2 flex items-center justify-between';
-        
-        const dots = document.createElement('div');
-        dots.className = 'flex items-center gap-2';
-        dots.innerHTML = `
-          <div class="w-3 h-3 rounded-full bg-red-400"></div>
-          <div class="w-3 h-3 rounded-full bg-amber-400"></div>
-          <div class="w-3 h-3 rounded-full bg-green-400"></div>
-          <span class="ml-2 text-xs font-semibold text-zinc-400 font-mono">例題 ${index + 1}.kanade</span>
-        `;
-        
+        header.className = 'hj-panel-head';
+
+        const label = document.createElement('span');
+        label.className = 'hj-tag';
+        label.textContent = `例題 ${index + 1}`;
+
         const runBtn = document.createElement('button');
-        runBtn.className = 'text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1 border border-blue-200';
+        runBtn.className = 'hj-run';
         runBtn.innerHTML = `実行`;
-        
-        header.appendChild(dots);
+
+        header.appendChild(label);
         header.appendChild(runBtn);
 
         // Editor area
         const editorDiv = document.createElement('div');
-        editorDiv.className = 'w-full text-[14.5px]';
-        
+        editorDiv.className = 'w-full';
+
         // Output area
         const outputWrapper = document.createElement('div');
-        outputWrapper.className = 'hidden flex-col border-t border-zinc-200 bg-zinc-900';
-        
+        outputWrapper.className = 'hidden flex-col hj-out';
+
         const outputHeader = document.createElement('div');
-        outputHeader.className = 'bg-[#2D2D2D] px-4 py-1.5 border-b border-zinc-700 text-xs font-semibold text-zinc-400 font-mono flex items-center gap-2';
-        outputHeader.innerHTML = `<div class="w-2 h-2 rounded-full bg-zinc-500"></div>結果`;
-        
+        outputHeader.className = 'hj-out-head';
+        outputHeader.textContent = '結果';
+
         const outputPre = document.createElement('pre');
-        outputPre.className = 'p-4 text-[13.5px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed m-0';
-        
+        outputPre.className = 'p-4 text-[13.5px] whitespace-pre-wrap m-0';
+
         outputWrapper.appendChild(outputHeader);
         outputWrapper.appendChild(outputPre);
 
@@ -330,12 +317,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
               kanadeLinter,
               kanadeAutocomplete,
             EditorView.lineWrapping,
-            EditorView.theme({
-              "&": { height: "auto", maxHeight: "400px" },
-              "&.cm-focused": { outline: "none" },
-              ".cm-scroller": { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" },
-              ".cm-gutters": { backgroundColor: "#fbfbfb", borderRight: "1px solid #f0f0f0", color: "#999" }
-            })
+            kanadeTheme({ maxHeight: "400px" })
           ],
           parent: editorDiv
         });
@@ -359,7 +341,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
             const code = editorView.state.doc.toString();
             const result = await runKanade(code, createInputCallback(outputPre), outputCallback);
             if (!printedSomething && !result) {
-               outputPre.innerText += '\n(あっ、出力された結果がありません. "出力しよう"」を使ってみてください.)';
+               outputPre.innerText += '\n(あっ、出力された結果がありません。「出力しよう」を使ってみてください。)';
             }
           } catch (err) {
             outputPre.innerText += "\n" + String(err);
