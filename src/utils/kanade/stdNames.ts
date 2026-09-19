@@ -119,6 +119,23 @@ export const stdModules: readonly StdModule[] = [
     ],
   },
   {
+    id: "file",
+    name: "ファイル",
+    nativeOnly: true,
+    functions: [
+      { id: "file.read", name: "読む" },
+      { id: "file.lines", name: "行で読む" },
+      { id: "file.write", name: "書く" },
+      { id: "file.append", name: "追記" },
+      { id: "file.exists", name: "あるか" },
+      { id: "file.isdir", name: "フォルダか" },
+      { id: "file.delete", name: "削除" },
+      { id: "file.list", name: "一覧" },
+      { id: "file.mkdir", name: "フォルダ作成" },
+      { id: "file.move", name: "移動" },
+    ],
+  },
+  {
     id: "regex",
     name: "正規表現",
     functions: [
