@@ -9,7 +9,7 @@
 import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { MAX_CALL_DEPTH } from "./config";
-import { checkInitialField } from "./types";
+import { checkInitialField, describeType } from "./types";
 import { Environment } from "./env";
 import { executeStmt } from "./execStmt";
 import { bindParams } from "./params";
@@ -595,6 +595,26 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         return expr.operator === "==" ? left === right : left !== right;
       }
 
+      switch (expr.operator) {
+        case "+":
+        case "-":
+        case "*":
+        case "/":
+        case "%":
+        case ">":
+        case "<":
+        case ">=":
+        case "<=":
+          break;
+        default:
+          return null;
+      }
+
+      // Null-safe (Runtime spec 2.4): only the equality operators may see 비어있음.
+      if (left === null || left === undefined || right === null || right === undefined) {
+        throw new RuntimeError(Codes.NullOperand, expr.operator);
+      }
+
       if (typeof left === "number" && typeof right === "number") {
         switch (expr.operator) {
           case "+":
@@ -620,10 +640,16 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         }
       }
 
-      if (expr.operator === "+") {
-        return `${i.formatValue(left)}${i.formatValue(right)}`;
+      // String addition only joins strings: no implicit conversion (Runtime spec 2.2).
+      if (expr.operator === "+" && typeof left === "string" && typeof right === "string") {
+        return left + right;
       }
-      return null;
+      throw new RuntimeError(
+        Codes.OperandTypeMismatch,
+        expr.operator,
+        describeType(i.config.types, left, i),
+        describeType(i.config.types, right, i),
+      );
     }
     default:
       return null;

@@ -2,6 +2,8 @@
 // Edit the Go catalogs (errs/ko.go, ja.go, en.go) and regenerate.
 
 export const Codes = {
+  OperandTypeMismatch: "TypeError.OperandTypeMismatch",
+  NullOperand: "NullReferenceError.NullOperand",
   VariableTypeMismatch: "TypeError.VariableTypeMismatch",
   ArgumentTypeMismatch: "TypeError.ArgumentTypeMismatch",
   CallTooDeep: "RecursionError.CallTooDeep",
@@ -68,6 +70,8 @@ export type Catalog = Record<Code, string>;
 
 export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
   en: {
+    [Codes.OperandTypeMismatch]: "Operator '%[1]s' cannot combine '%[2]s' and '%[3]s' (there are no implicit conversions).",
+    [Codes.NullOperand]: "Operator '%s' cannot take a null value.",
     [Codes.VariableTypeMismatch]: "'%[1]s' can only hold '%[2]s', but got '%[3]s'.",
     [Codes.ArgumentTypeMismatch]: "Argument '%[1]s' must be '%[2]s', but got '%[3]s'.",
     [Codes.CallTooDeep]: "Calls are nested too deeply (more than %d levels).",
@@ -128,6 +132,8 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "Cannot convert '%s' to true/false.",
   },
   ko: {
+    [Codes.OperandTypeMismatch]: "'%[1]s' 연산은 '%[2]s'와(과) '%[3]s' 사이에서 할 수 없어요. 자동 형변환은 하지 않아요.",
+    [Codes.NullOperand]: "'%s' 연산에는 비어있음 값을 쓸 수 없어요.",
     [Codes.VariableTypeMismatch]: "'%[1]s'에는 '%[2]s' 타입만 담을 수 있어요. '%[3]s' 값이 들어왔어요.",
     [Codes.ArgumentTypeMismatch]: "'%[1]s' 인자에는 '%[2]s' 타입만 넘길 수 있어요. '%[3]s' 값이 들어왔어요.",
     [Codes.CallTooDeep]: "호출이 너무 깊게 쌓여서 %d단계를 넘었어요.",
@@ -188,6 +194,8 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "'%s'을(를) 참/거짓으로 바꿀 수 없어요.",
   },
   ja: {
+    [Codes.OperandTypeMismatch]: "『%[1]s』演算は『%[2]s』と『%[3]s』の間ではできません。自動変換はしません。",
+    [Codes.NullOperand]: "『%s』演算には空っぽの値を使えません。",
     [Codes.VariableTypeMismatch]: "『%[1]s』には『%[2]s』型の値しか入れられません。『%[3]s』の値が渡されました。",
     [Codes.ArgumentTypeMismatch]: "引数『%[1]s』には『%[2]s』型の値しか渡せません。『%[3]s』の値が渡されました。",
     [Codes.CallTooDeep]: "呼び出しが深く重なりすぎて、%d階層を超えました。",
