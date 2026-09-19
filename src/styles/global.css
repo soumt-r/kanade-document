@@ -271,3 +271,15 @@
   .hj-out .tk-type { color: #8f9bff; }
   .hj-out .tk-str { color: #5fd6b3; }
 }
+
+/* 제목의 후리가나: 「奏でて」「叶える」가 둘 다 "かな"로 시작하는 말장난을 눈에 보이게 한다. */
+@layer components {
+  .text-gradient rt {
+    -webkit-text-fill-color: var(--color-verb);
+  }
+  h1 rt {
+    font-size: 0.22em;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+}
