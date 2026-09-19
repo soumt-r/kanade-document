@@ -8,6 +8,7 @@
 // exceptions where Go only has plain error returns.
 import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
+import { MAX_CALL_DEPTH } from "./config";
 import { Environment } from "./env";
 import { executeStmt } from "./execStmt";
 import { bindParams } from "./params";
@@ -49,6 +50,20 @@ function unescapeString(val: string): string {
 export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | null, env: Environment): Promise<unknown> {
   if (expr === null) return null;
 
+  // Calls and constructions are what recurse; count them like hana's Evaluate does.
+  if (expr.type === "CallExpression" || expr.type === "NewExpression") {
+    if (i.callDepth >= MAX_CALL_DEPTH) throw new RuntimeError(Codes.CallTooDeep, MAX_CALL_DEPTH);
+    i.callDepth++;
+    try {
+      return await evaluateNodeInner(i, expr, env);
+    } finally {
+      i.callDepth--;
+    }
+  }
+  return evaluateNodeInner(i, expr, env);
+}
+
+async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env: Environment): Promise<unknown> {
   switch (expr.type) {
     case "TypeReference": {
       const [clsObj, exists] = env.get(expr.name);

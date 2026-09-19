@@ -16,6 +16,7 @@ import { RuntimeError, Codes, localize } from "./errs";
 import { BuiltinFunction, type BuiltinFn, type NativeModule } from "./object";
 
 export class KanadeInterpreter {
+  callDepth = 0;
   ast: ast.Program;
   globalEnv: Environment;
   classes: Record<string, ast.ClassDeclaration> = {};

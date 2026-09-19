@@ -90,3 +90,7 @@ export const JapaneseConfig: LangConfig = {
   equalsMethodName: "記号 同じだ",
   locale: "ja",
 };
+
+// Bounds nested calls so runaway recursion becomes a catchable RecursionError,
+// the same number as hana's vm.MaxCallDepth.
+export const MAX_CALL_DEPTH = 10000;
