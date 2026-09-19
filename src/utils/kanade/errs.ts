@@ -62,6 +62,21 @@ export function localize(loc: Locale, err: unknown): string {
   return String(err);
 }
 
+// syntaxError is the typed, localizable error for a parser diagnostic: an
+// unknown token, or (empty literal) running off the end of the input. Mirrors
+// parser/haja's Diagnostic.Err in hana.
+export function syntaxError(d: { line: number; col: number; literal: string }): RuntimeError {
+  if (d.literal === "") return new RuntimeError(Codes.UnexpectedEnd, d.line);
+  return new RuntimeError(Codes.UnexpectedToken, d.line, d.col + 1, d.literal);
+}
+
+// message is localize without the "<Kind>: " prefix, for places (an editor's
+// squiggle) where the kind is noise.
+export function message(loc: Locale, err: unknown): string {
+  const text = localize(loc, err);
+  return err instanceof RuntimeError ? text.replace(`${kindOf(err.code)}: `, "") : text;
+}
+
 // accessViolation picks the Code for a member access refused by its modifier
 // ("private" or "protected") — four wordings, one call for the throwing site.
 export function accessViolation(access: string, isMethod: boolean, name: string): RuntimeError {

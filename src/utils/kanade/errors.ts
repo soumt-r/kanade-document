@@ -23,6 +23,15 @@ export class KanadeError extends Error {
   }
 }
 
+// The parser found syntax problems; message is the finished, localized report
+// (index.ts throws it as-is, without an engine-bug prefix).
+export class KanadeSyntaxReport extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "KanadeSyntaxReport";
+  }
+}
+
 export class KanadeRuntimeError extends Error {
   line: number | string;
   hajaObj?: unknown;

@@ -10,9 +10,14 @@ export interface Token {
   type: TokenType;
   literal: string;
   line: number;
+  col: number; // 0-based, in UTF-16 units of the source line
 }
 
 export const EOF = "EOF";
+
+// A character no lexer rule accepts. It stays in the stream so the parser
+// reports it as an unexpected token (mirrors hana/token.ILLEGAL).
+export const ILLEGAL = "ILLEGAL";
 
 export const IDENT = "IDENT";
 export const INT = "INT";

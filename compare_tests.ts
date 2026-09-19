@@ -5,6 +5,8 @@ import { Lexer } from './src/utils/kanade/lexer.ts';
 import { Parser } from './src/utils/kanade/parser.ts';
 import { KanadeInterpreter as Interpreter } from './src/utils/kanade/interpreter.ts';
 import { registerStandardLibrary } from './src/utils/kanade/stdlib.ts';
+import { JapaneseConfig } from './src/utils/kanade/config.ts';
+import { localize, syntaxError } from './src/utils/kanade/errs.ts';
 
 const DOCS_DIR = './src/pages/docs';
 const GO_EXECUTABLE = '..\\hana\\hana.exe';
@@ -85,6 +87,28 @@ const EXTRA_CASES: { name: string; code: string }[] = [
     { name: "없는 함수", code: "【数学】から〈ない関数〉を持ってこよう" },
 ];
 
+// 구문 오류 문구: TS 엔진의 진단을 현지화한 문장이 hana가 보여 주는 문장과 같아야 한다.
+const SYNTAX_CASES: string[] = ["「あ」を出力しよう )", "「あ」を出力しよう ＠", "1 +"];
+
+function goSyntaxMessages(code: string): string[] {
+    const tempFile = 'temp_syntax.knd';
+    writeFileSync(tempFile, code);
+    let stdout = '';
+    try {
+        stdout = execSync(`${GO_EXECUTABLE} run ${tempFile}`, { stdio: ['pipe', 'pipe', 'pipe'] }).toString();
+    } catch (e: any) {
+        stdout = e.stdout ? e.stdout.toString() : '';
+    }
+    unlinkSync(tempFile);
+    return stdout.split(/\r?\n/).filter((l) => l.startsWith('  - ')).map((l) => l.slice(4));
+}
+
+function tsSyntaxMessages(code: string): string[] {
+    const parser = new Parser(new Lexer(code).tokens);
+    parser.parseProgram();
+    return parser.diagnostics.map((d) => localize(JapaneseConfig.locale, syntaxError(d)));
+}
+
 async function main() {
     console.log("🔍 TypeScript 엔진 vs Go 엔진 출력 비교를 시작합니다 (Kanade)...\n");
 
@@ -128,6 +152,19 @@ ${tsOutput}`);
             console.log(`-- Go 출력 --
 ${goOutput}
 `);
+        }
+    }
+
+    for (const code of SYNTAX_CASES) {
+        total++;
+        const ts = tsSyntaxMessages(code).join('\n');
+        const go = goSyntaxMessages(code).join('\n');
+        if (ts === go && ts !== '') {
+            passed++;
+        } else {
+            console.log(`❌ [불일치] 구문 오류 케이스: ${code}`);
+            console.log(`-- TS --\n${ts}`);
+            console.log(`-- Go --\n${go}\n`);
         }
     }
 

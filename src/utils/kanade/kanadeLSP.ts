@@ -6,9 +6,12 @@
 import { autocompletion } from "@codemirror/autocomplete";
 import type { CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { linter } from "@codemirror/lint";
+import type { EditorView } from "@codemirror/view";
 import type { Diagnostic } from "@codemirror/lint";
 import { Lexer } from "./lexer";
 import { Parser } from "./parser";
+import { JapaneseConfig } from "./config";
+import { message, syntaxError } from "./errs";
 
 const keywords = [
   "真", "偽", "空っぽ", "設計しよう", "規定しよう", "なければならない", "最初に作られる時",
@@ -140,7 +143,7 @@ export function kanadeCompletions(context: CompletionContext): CompletionResult 
 
 export const kanadeAutocomplete = autocompletion({ override: [kanadeCompletions] });
 
-export const kanadeLinter = linter((view) => {
+export const kanadeLintSource = (view: EditorView): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
   const doc = view.state.doc.toString();
 
@@ -150,6 +153,21 @@ export const kanadeLinter = linter((view) => {
     const lexer = new Lexer(doc);
     const parser = new Parser(lexer.tokens);
     parser.parseProgram();
+    // The parser recovers from bad tokens, so it reports them as diagnostics
+    // (same wording as hana's LSP and CLI, from the shared error catalog).
+    for (const d of parser.diagnostics) {
+      const line = Math.min(Math.max(d.line, 1), view.state.doc.lines);
+      const info = view.state.doc.line(line);
+      // Running off the end (empty literal) has no token: mark the line's last character.
+      const from = d.literal === "" ? Math.max(info.to - 1, info.from) : Math.min(info.from + d.col, info.to);
+      const to = d.literal === "" ? info.to : Math.min(from + Math.max(d.literal.length, 1), info.to);
+      diagnostics.push({
+        from,
+        to: Math.max(to, from),
+        severity: "error",
+        message: message(JapaneseConfig.locale, syntaxError(d)),
+      });
+    }
   } catch (err: any) {
     const msg = String(err);
     // KanadeError の message は "N行目、N文字目: ..." 形式(errors.ts 参照)。
@@ -181,4 +199,6 @@ export const kanadeLinter = linter((view) => {
   }
 
   return diagnostics;
-});
+};
+
+export const kanadeLinter = linter(kanadeLintSource);

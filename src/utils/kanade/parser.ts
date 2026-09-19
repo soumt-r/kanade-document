@@ -10,9 +10,20 @@ import type { Token } from "./token";
 import { Lexer } from "./lexer";
 import { kanadeProfile, literalIn, LoopKind, type Component, type LangProfile } from "./langProfile";
 
+// A parse problem with its position (1-based line, 0-based column in UTF-16
+// units). The parser recovers and keeps going, so problems are collected -
+// mirrors parser/haja's Diagnostic in hana.
+export interface ParseDiagnostic {
+  line: number;
+  col: number;
+  length: number;
+  literal: string; // empty means the parser ran off the end of the input
+}
+
 export class Parser {
   private tokens: Token[];
   private pos = 0;
+  private diags: ParseDiagnostic[] = [];
   private lang: LangProfile = kanadeProfile;
 
   constructor(tokens: Token[]) {
@@ -27,6 +38,23 @@ export class Parser {
     const t = this.tokens[this.pos];
     this.pos++;
     return t;
+  }
+
+  // What to report. Running off the end of the input is usually fallout of an
+  // earlier bad token, so it is included only when nothing better explains it,
+  // and only once.
+  get diagnostics(): ParseDiagnostic[] {
+    const real = this.diags.filter((d) => d.literal !== "");
+    if (real.length === 0 && this.diags.length > 0) return [this.diags[0]];
+    return real;
+  }
+
+  private lastContentLine(): number {
+    for (let i = this.tokens.length - 1; i >= 0; i--) {
+      const type = this.tokens[i].type;
+      if (type !== tok.EOF && type !== tok.INDENT && type !== tok.DEDENT) return this.tokens[i].line;
+    }
+    return 1;
   }
 
   parseProgram(): ast.Program {
@@ -908,6 +936,12 @@ export class Parser {
       if (this.peek() && this.peek()!.type === tok.RPAREN) this.consume();
       return expr;
     }
+    this.diags.push({
+      line: t.literal === "" ? this.lastContentLine() : t.line,
+      col: t.col,
+      length: Array.from(t.literal).length,
+      literal: t.literal,
+    });
     return { type: "StringLiteral", value: `알수없음: ${t.literal}` };
   }
 
