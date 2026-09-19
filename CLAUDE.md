@@ -36,3 +36,5 @@ Consult these guides before working on related tasks:
 で再生成します (`-check` で最新かどうか確認)。新しいネイティブ関数の動作は `stdlib.ts` の `nativeImpls` に ID で実装します。
 
 構文エラーも Go と同じです。パーサーが未知のトークン・文字を `parser.diagnostics`(行・列)に集め、`index.ts`(実行)と `kanadeLSP.ts`(エディタの下線)が `errs.ts` の `syntaxError`/`message` で同じ文言を出します。文言は `hana/errs` の `SyntaxError.*` コードから生成され、`compare_tests.ts` が Go と比較します。
+
+`src/utils/kanade/lspKeywords.ts` も `hana/lsp` のキーワード表から**生成されるファイル**です(`kanadeLSP.ts` の補完が使用)。直接編集せず、`cd ../hana && go run ./cmd/lspgen -haja ../haja-docs/src/utils/haja/lspKeywords.ts -kanade ../kanade-docs/src/utils/kanade/lspKeywords.ts` で再生成します(`-check` で最新かどうか確認)。
