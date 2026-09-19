@@ -77,6 +77,14 @@ async function walk(dir: string, callback: (path: string) => Promise<void>) {
     }
 }
 
+// 문서 예제에는 없지만 두 엔진이 같아야 하는 동작: 표준 라이브러리(std) 임포트.
+const EXTRA_CASES: { name: string; code: string }[] = [
+    { name: "std 임포트", code: "【数学】から〈切り上げ〉を持ってこよう\n枠「{〈切り上げ〉(3.2)}」を出力しよう" },
+    { name: "std 임포트 (별칭)", code: "【数学】から〈切り捨て〉を〈床〉に持ってこよう\n枠「{〈床〉(3.9)}」を出力しよう" },
+    { name: "없는 모듈", code: "【なにもない】から〈関数〉を持ってこよう" },
+    { name: "없는 함수", code: "【数学】から〈ない関数〉を持ってこよう" },
+];
+
 async function main() {
     console.log("🔍 TypeScript 엔진 vs Go 엔진 출력 비교를 시작합니다 (Kanade)...\n");
 
@@ -104,6 +112,24 @@ async function main() {
             }
         }
     });
+
+    for (const c of EXTRA_CASES) {
+        total++;
+        const tsOutput = await runTypeScriptEngine(c.code);
+        const goOutput = runGoEngine(c.code);
+        if (tsOutput === goOutput) {
+            passed++;
+        } else {
+            console.log(`❌ [불일치] 추가 케이스: ${c.name}`);
+            console.log(`-- 코드 --
+${c.code}`);
+            console.log(`-- TS 출력 --
+${tsOutput}`);
+            console.log(`-- Go 출력 --
+${goOutput}
+`);
+        }
+    }
 
     console.log(`=========================================`);
     console.log(`총 실행된 코드 블록: ${total}개`);

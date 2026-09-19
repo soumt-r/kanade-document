@@ -102,10 +102,18 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
     }
     case "BreakStatement":
       throw new BreakSignal();
-    case "ImportStatement":
-      // 웹 놀이터에서는 외부 파일(모듈) 가져오기를 지원하지 않는다 — Go의
-      // vm/import.go(파일시스템·DLL FFI)는 브라우저 새시박스에 적용 불가.
-      throw new RuntimeError(Codes.ImportUnsupported);
+    case "ImportStatement": {
+      // Only hana's standard library (native modules, `[수학]` style) can be
+      // imported in the browser; there is no file system for local files or
+      // third-party packages. Unknown modules and unknown members report the
+      // same error Go does when nothing matches.
+      if (!stmt.isBuiltin) throw new RuntimeError(Codes.ImportUnsupported);
+      const module = Object.hasOwn(i.nativeModules, stmt.module) ? i.nativeModules[stmt.module] : undefined;
+      const member = module && Object.hasOwn(module, stmt.target) ? module[stmt.target] : undefined;
+      if (!member) throw new RuntimeError(Codes.ImportPackageNotFound, stmt.module);
+      env.declare(ast.importBindName(stmt), member);
+      return;
+    }
     case "VariableDeclaration": {
       const val = await evaluateNode(i, stmt.value, env);
       if (stmt.isStatic) {
