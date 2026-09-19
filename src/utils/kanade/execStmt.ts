@@ -110,9 +110,15 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       // same error Go does when nothing matches.
       if (!stmt.isBuiltin) throw new RuntimeError(Codes.ImportUnsupported);
       const module = Object.hasOwn(i.nativeModules, stmt.module) ? i.nativeModules[stmt.module] : undefined;
-      const member = module && Object.hasOwn(module, stmt.target) ? module[stmt.target] : undefined;
-      if (!member) throw new RuntimeError(Codes.ImportPackageNotFound, stmt.module);
-      env.declare(ast.importBindName(stmt), member);
+      if (!module) throw new RuntimeError(Codes.ImportPackageNotFound, stmt.module);
+      if (stmt.all) {
+        for (const [name, fn] of Object.entries(module)) env.declare(name, fn);
+      }
+      for (const item of stmt.items) {
+        const member = Object.hasOwn(module, item.name) ? module[item.name] : undefined;
+        if (!member) throw new RuntimeError(Codes.ImportPackageNotFound, stmt.module);
+        env.declare(ast.importBindName(item), member);
+      }
       return;
     }
     case "VariableDeclaration": {

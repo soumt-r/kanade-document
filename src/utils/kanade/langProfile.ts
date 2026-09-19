@@ -35,6 +35,9 @@ export interface LangProfile {
   normalizeCompareOpSOV(op: string): string;
   normalizeCompareOpSVO(op: string): string;
   importAsParticles: string[];
+  // The word that imports a whole module, and the particles joining an import list's items.
+  importAllWord: string;
+  importJoinParticles: string[];
   delimLen: number;
   typeOpen: string;
   typeClose: string;
@@ -97,4 +100,6 @@ export const kanadeProfile: LangProfile = {
     return op;
   },
   importAsParticles: ["に"],
+  importAllWord: "全部",
+  importJoinParticles: ["と"],
 };

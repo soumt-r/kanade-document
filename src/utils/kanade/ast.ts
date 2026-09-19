@@ -272,18 +272,25 @@ export interface ClassDeclaration {
   isAbstract: boolean; // declared with the abstract verb; cannot be instantiated
 }
 
-// ImportStatement is `[모듈]에서 <이름>을 가져오자` (또는 `""에서`/`<이름>을
-// <별칭>으로 가져오자`). `as` is "" unless the source used the renaming form.
+// ImportItem is one name an import brings in; `as` is "" unless it was renamed.
+export interface ImportItem {
+  name: string;
+  as: string;
+}
+
+export function importBindName(item: ImportItem): string {
+  return item.as !== "" ? item.as : item.name;
+}
+
+// ImportStatement is `[모듈]에서 <이름>을 가져오자`, its list form
+// (`<이름>와 <이름2>를 가져오자`), or the whole-module form (`all`).
+// Only a single item can be renamed.
 export interface ImportStatement {
   type: "ImportStatement";
   module: string;
-  target: string;
-  as: string;
   isBuiltin: boolean;
-}
-
-export function importBindName(stmt: ImportStatement): string {
-  return stmt.as !== "" ? stmt.as : stmt.target;
+  all: boolean;
+  items: ImportItem[];
 }
 
 export interface InterfaceDeclaration {

@@ -764,14 +764,25 @@ export class Parser {
           isBuiltin = true;
         }
 
-        const target = importNameFromExpr(components[1].expr);
+        const rest = components.slice(1);
 
-        let as = "";
-        if (components.length >= 3 && hasParticle(components[2].particles, ...this.lang.importAsParticles)) {
-          as = importNameFromExpr(components[2].expr);
+        // `전부` alone, without a particle, imports the whole module.
+        if (rest.length === 1 && rest[0].particles.length === 0) {
+          const only = rest[0].expr;
+          if (only.type === "Identifier" && only.value === this.lang.importAllWord) {
+            return { type: "ImportStatement", module: moduleName, isBuiltin, all: true, items: [] };
+          }
         }
 
-        return { type: "ImportStatement", module: moduleName, target, as, isBuiltin };
+        // `<이름>을 <별칭>으로`: a second component with the alias particle renames the first.
+        if (rest.length === 2 && hasParticle(rest[1].particles, ...this.lang.importAsParticles)) {
+          return {
+            type: "ImportStatement", module: moduleName, isBuiltin, all: false,
+            items: [{ name: importNameFromExpr(rest[0].expr), as: importNameFromExpr(rest[1].expr) }],
+          };
+        }
+        const items = rest.map((comp) => ({ name: importNameFromExpr(comp.expr), as: "" }));
+        return { type: "ImportStatement", module: moduleName, isBuiltin, all: false, items };
       }
     }
 

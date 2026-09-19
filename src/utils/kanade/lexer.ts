@@ -74,6 +74,8 @@ const SPECS: Spec[] = [
   // means "値にしよう" would otherwise fall through to the generic IDENT
   // catch-all and get swallowed whole (value+verb as one token).
   { kind: tok.IDENT, regex: /^値/ },
+  // "全部" (importAllWord) is followed directly by the verb: `【数学】から全部持ってこよう`.
+  { kind: tok.IDENT, regex: /^全部/ },
   { kind: tok.KW_MAKE, regex: /^作って隠そう|^作って譲ろう|^作ろう|^にしよう|^固定しよう|^隠そう|^譲ろう|^準備しよう/ },
   { kind: tok.KW_PRINT, regex: /^続けて出力しよう|^出力しよう/ },
   { kind: tok.KW_INPUT, regex: /^入力させよう|^入力してもらおう/ },

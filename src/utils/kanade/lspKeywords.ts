@@ -67,5 +67,6 @@ export const lspKeywords = {
     "値",
     "長さ",
     "私たち",
+    "全部",
   ],
 } as const;
