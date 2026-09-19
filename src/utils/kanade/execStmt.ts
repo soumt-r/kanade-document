@@ -19,6 +19,7 @@ import { evaluateNode, execBlock } from "./evalExpr";
 import { popFromList, assignListBack } from "./listOps";
 import { findInClassChain, thrownValueMatchesType } from "./classLookup";
 import { HajaObject, ClassReference } from "./object";
+import { assignVariable, checkDeclaredType, checkField } from "./types";
 import { ReturnSignal, BreakSignal, ThrownSignal } from "./errors";
 import { RuntimeError, Codes, localize } from "./errs";
 
@@ -122,12 +123,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           i.globalEnv.declare(`${clsName}.${stmt.name.value}`, val);
         }
       } else {
-        const [assigned, err] = env.assign(stmt.name.value, val);
-        if (err) throw err;
-        if (!assigned) {
-          if (stmt.isConstant) env.declareConst(stmt.name.value, val);
-          else env.declare(stmt.name.value, val);
-        }
+        assignVariable(i, env, stmt.name.value, val, stmt.typeRef ? stmt.typeRef.name : "", stmt.isConstant);
       }
       return;
     }
@@ -158,10 +154,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       }
 
       i.inlineBuffer = "";
-      if (stmt.target) {
-        const [assigned] = env.assign(stmt.target.value, val);
-        if (!assigned) env.declare(stmt.target.value, val);
-      }
+      if (stmt.target) assignVariable(i, env, stmt.target.value, val, "", false);
       return;
     }
     case "PrintStatement": {
@@ -296,6 +289,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       const val = await evaluateNode(i, stmt.value, env);
 
       if (stmt.target.type === "Identifier") {
+        checkDeclaredType(i, env, stmt.target.value, val);
         const [, err] = env.assign(stmt.target.value, val);
         if (err) throw err;
         return;
@@ -328,6 +322,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
               }
               await execBlock(i, (setter as ast.SetterInfo).body, setterEnv);
             } else {
+              checkField(i, obj, mem.property.value, val);
               obj.props[mem.property.value] = val;
             }
           }

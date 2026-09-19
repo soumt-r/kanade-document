@@ -24,6 +24,9 @@ export class Parser {
   private tokens: Token[];
   private pos = 0;
   private diags: ParseDiagnostic[] = [];
+  // The `[타입]인 값` annotation parsePrimary just consumed; the SOV loop moves it
+  // onto the component so a declaration can keep it (mirrors parser/haja).
+  private declaredType: ast.TypeReference | null = null;
   private lang: LangProfile = kanadeProfile;
 
   constructor(tokens: Token[]) {
@@ -554,7 +557,10 @@ export class Parser {
       ) {
         break;
       }
+      this.declaredType = null;
       const expr = this.parseExpression();
+      const declared = this.declaredType;
+      this.declaredType = null;
       const parts: string[] = [];
       while (
         this.peek() !== null &&
@@ -570,7 +576,7 @@ export class Parser {
           parts.push(consumed.literal);
         }
       }
-      components.push({ expr, particles: parts });
+      components.push({ expr, particles: parts, type: declared });
     }
 
     if (this.peek() === null || this.peek()!.type === tok.EOF) return null;
@@ -585,6 +591,7 @@ export class Parser {
     if (verb.type === tok.KW_MAKE) {
       const target = components[0].expr;
       const val: ast.Expression | null = components.length > 1 ? components[1].expr : null;
+      const declared: ast.TypeReference | null = components.length > 1 ? components[1].type : null;
 
       const access = this.lang.accessModifierFromVerb(verb.literal);
       const isConst = this.lang.isConstVerb(verb.literal);
@@ -593,7 +600,7 @@ export class Parser {
         return {
           type: "VariableDeclaration",
           name: target,
-          typeRef: null,
+          typeRef: declared,
           value: val,
           isConstant: isConst,
           accessModifier: access,
@@ -609,7 +616,7 @@ export class Parser {
             return {
               type: "VariableDeclaration",
               name: target.property,
-              typeRef: null,
+              typeRef: declared,
               value: val,
               isConstant: false,
               accessModifier: access,
@@ -906,7 +913,9 @@ export class Parser {
           return { type: "MemberExpression", object: typeRef, property: prop };
         }
         this.consume(); // 인
-        return this.parsePrimary();
+        const res = this.parsePrimary();
+        this.declaredType = typeRef;
+        return res;
       }
       return typeRef;
     }

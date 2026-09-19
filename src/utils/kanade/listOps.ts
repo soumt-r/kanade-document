@@ -10,6 +10,7 @@ import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { evaluateNode } from "./evalExpr";
 import { HajaObject } from "./object";
+import { checkDeclaredType, checkField } from "./types";
 
 export function popFromList(list: unknown[], position: "front" | "back"): [unknown, unknown[]] {
   if (position === "front") return [list[0], list.slice(1)];
@@ -18,6 +19,7 @@ export function popFromList(list: unknown[], position: "front" | "back"): [unkno
 
 export async function assignListBack(i: KanadeInterpreter, target: ast.Expression, newList: unknown[], env: Environment): Promise<void> {
   if (target.type === "Identifier") {
+    checkDeclaredType(i, env, target.value, newList);
     const [, err] = env.assign(target.value, newList);
     if (err) throw err;
     return;
@@ -25,6 +27,7 @@ export async function assignListBack(i: KanadeInterpreter, target: ast.Expressio
   if (target.type === "MemberExpression") {
     const obj = await evaluateNode(i, target.object, env);
     if (obj instanceof HajaObject && target.property.type === "Identifier") {
+      checkField(i, obj, target.property.value, newList);
       obj.props[target.property.value] = newList;
     }
   }

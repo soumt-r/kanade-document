@@ -2,6 +2,8 @@
 // Edit the Go catalogs (errs/ko.go, ja.go, en.go) and regenerate.
 
 export const Codes = {
+  VariableTypeMismatch: "TypeError.VariableTypeMismatch",
+  ArgumentTypeMismatch: "TypeError.ArgumentTypeMismatch",
   CallTooDeep: "RecursionError.CallTooDeep",
   UnexpectedToken: "SyntaxError.UnexpectedToken",
   UnexpectedEnd: "SyntaxError.UnexpectedEnd",
@@ -66,6 +68,8 @@ export type Catalog = Record<Code, string>;
 
 export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
   en: {
+    [Codes.VariableTypeMismatch]: "'%[1]s' can only hold '%[2]s', but got '%[3]s'.",
+    [Codes.ArgumentTypeMismatch]: "Argument '%[1]s' must be '%[2]s', but got '%[3]s'.",
     [Codes.CallTooDeep]: "Calls are nested too deeply (more than %d levels).",
     [Codes.UnexpectedToken]: "Unexpected '%[3]s' at line %[1]d, column %[2]d.",
     [Codes.UnexpectedEnd]: "Unexpected end of input at line %[1]d.",
@@ -124,6 +128,8 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "Cannot convert '%s' to true/false.",
   },
   ko: {
+    [Codes.VariableTypeMismatch]: "'%[1]s'에는 '%[2]s' 타입만 담을 수 있어요. '%[3]s' 값이 들어왔어요.",
+    [Codes.ArgumentTypeMismatch]: "'%[1]s' 인자에는 '%[2]s' 타입만 넘길 수 있어요. '%[3]s' 값이 들어왔어요.",
     [Codes.CallTooDeep]: "호출이 너무 깊게 쌓여서 %d단계를 넘었어요.",
     [Codes.UnexpectedToken]: "%[1]d번째 줄 %[2]d번째 글자의 '%[3]s'를 이해할 수 없어요.",
     [Codes.UnexpectedEnd]: "%[1]d번째 줄에서 문장이 끝나지 않았어요.",
@@ -182,6 +188,8 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "'%s'을(를) 참/거짓으로 바꿀 수 없어요.",
   },
   ja: {
+    [Codes.VariableTypeMismatch]: "『%[1]s』には『%[2]s』型の値しか入れられません。『%[3]s』の値が渡されました。",
+    [Codes.ArgumentTypeMismatch]: "引数『%[1]s』には『%[2]s』型の値しか渡せません。『%[3]s』の値が渡されました。",
     [Codes.CallTooDeep]: "呼び出しが深く重なりすぎて、%d階層を超えました。",
     [Codes.UnexpectedToken]: "%[1]d行目、%[2]d文字目の「%[3]s」を解釈できません。",
     [Codes.UnexpectedEnd]: "%[1]d行目で文が途中で終わっています。",

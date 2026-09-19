@@ -6,6 +6,7 @@ import { RuntimeError, Codes } from "./errs";
 export class Environment {
   private vars = new Map<string, unknown>();
   private constants = new Set<string>();
+  private types = new Map<string, string>(); // declared [타입] per variable of this scope
   parent: Environment | null;
   this_: HajaObject | null = null;
 
@@ -20,6 +21,24 @@ export class Environment {
   declareConst(name: string, value: unknown): void {
     this.vars.set(name, value);
     this.constants.add(name);
+  }
+
+  // declareType records the type a variable declared in this scope was
+  // annotated with; later assignments must keep honoring it.
+  declareType(name: string, annotation: string): void {
+    this.types.set(name, annotation);
+  }
+
+  declaredType(name: string): string | undefined {
+    return this.types.get(name);
+  }
+
+  // ownerOf resolves name the way assign() does: the scope holding it as a
+  // variable, else the object whose field it is, else further out.
+  ownerOf(name: string): Environment | HajaObject | null {
+    if (this.vars.has(name)) return this;
+    if (this.this_ !== null && Object.prototype.hasOwnProperty.call(this.this_.props, name)) return this.this_;
+    return this.parent ? this.parent.ownerOf(name) : null;
   }
 
   private isConst(name: string): boolean {

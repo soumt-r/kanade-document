@@ -13,6 +13,8 @@ export enum LoopKind {
 export interface Component {
   expr: import("./ast").Expression;
   particles: string[];
+  // The `[타입]인 값` annotation this component had, if any (declared types).
+  type: import("./ast").TypeReference | null;
 }
 
 export interface LangProfile {

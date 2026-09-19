@@ -9,6 +9,7 @@
 import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { MAX_CALL_DEPTH } from "./config";
+import { checkInitialField } from "./types";
 import { Environment } from "./env";
 import { executeStmt } from "./execStmt";
 import { bindParams } from "./params";
@@ -190,7 +191,9 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
 
       for (const stmt of cls.body) {
         if (stmt.type === "VariableDeclaration" && !stmt.isStatic) {
-          obj.props[stmt.name.value] = await evaluateNode(i, stmt.value, env);
+          const initial = await evaluateNode(i, stmt.value, env);
+          checkInitialField(i, stmt, initial);
+          obj.props[stmt.name.value] = initial;
         } else if (stmt.type === "Assignment" && stmt.target.type === "Identifier") {
           obj.props[stmt.target.value] = await evaluateNode(i, stmt.value, env);
         }

@@ -4,6 +4,7 @@ import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { evaluateNode } from "./evalExpr";
 import { RuntimeError, Codes } from "./errs";
+import { declareParam } from "./types";
 
 // bindParams binds call arguments to a function/method/constructor's declared
 // parameters into env:
@@ -19,12 +20,12 @@ export async function bindParams(i: KanadeInterpreter, params: ast.Parameter[], 
   for (let idx = 0; idx < params.length; idx++) {
     const param = params[idx];
     if (idx < args.length) {
-      env.declare(param.name.value, args[idx]);
+      declareParam(i, env, param, args[idx]);
       continue;
     }
     if (param.default !== null) {
       const val = await evaluateNode(i, param.default, env);
-      env.declare(param.name.value, val);
+      declareParam(i, env, param, val);
       continue;
     }
     throw new RuntimeError(Codes.MissingArgument, param.name.value);

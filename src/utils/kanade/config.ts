@@ -4,6 +4,7 @@
 // 레포는 분리" decision).
 import type { Expression } from "./ast";
 import type { Locale } from "./errs";
+import type { TypeNames } from "./typecheck";
 
 export interface LangConfig {
   builtinToString: string;
@@ -42,6 +43,9 @@ export interface LangConfig {
   // it becomes user-visible text (a `発生したら` handler's caught message, the
   // Playground's error output). Mirrors vm.LangConfig.Locale.
   locale: Locale;
+
+  // The names of the built-in types (declared-type checks and 입력받자 use them).
+  types: TypeNames;
 
   parseEmbeddedExpr?: (code: string) => Expression;
 }
@@ -89,6 +93,7 @@ export const JapaneseConfig: LangConfig = {
   // (〈記号 同じだ〉, delimiters stripped).
   equalsMethodName: "記号 同じだ",
   locale: "ja",
+  types: { number: "数字", string: "文字列", boolean: "論理", any: "何でも", list: "リスト", dict: "辞書", null: "空っぽ" },
 };
 
 // Bounds nested calls so runaway recursion becomes a catchable RecursionError,
