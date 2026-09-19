@@ -269,6 +269,7 @@ export interface ClassDeclaration {
   baseClass: TypeReference | null;
   interfaces: TypeReference[];
   body: Statement[];
+  isAbstract: boolean; // declared with the abstract verb; cannot be instantiated
 }
 
 // ImportStatement is `[모듈]에서 <이름>을 가져오자` (또는 `""에서`/`<이름>을

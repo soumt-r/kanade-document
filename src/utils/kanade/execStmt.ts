@@ -339,6 +339,8 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           const propVal = await evaluateNode(i, mem.property, env).catch(() => undefined);
           if (propVal !== undefined) obj.set(propVal, val);
           else if (mem.property.type === "Identifier") obj.set(mem.property.value, val);
+        } else if (typeof obj === "string") {
+          throw new RuntimeError(Codes.StringIndex);
         } else if (obj instanceof ClassReference) {
           const propName = mem.property.type === "Identifier" ? mem.property.value : "";
           if (propName !== "") i.globalEnv.declare(`${obj.className}.${propName}`, val);

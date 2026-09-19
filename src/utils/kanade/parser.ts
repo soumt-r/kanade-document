@@ -319,6 +319,7 @@ export class Parser {
     let baseClass: ast.TypeReference | null = null;
     const interfaces: ast.TypeReference[] = [];
     let nameNode: ast.TypeReference | null = null;
+    let isAbstract = false;
 
     while (this.peek() !== null && this.peek()!.type !== tok.COLON && this.peek()!.type !== tok.DEDENT && this.peek()!.type !== tok.INDENT) {
       const t = this.peek()!;
@@ -336,13 +337,13 @@ export class Parser {
           interfaces.push(tNode);
         } else if (this.peek() && this.peek()!.type === tok.KW_CLASS) {
           nameNode = tNode;
-          this.consume(); // 설계하자 / 밑설계하자
+          isAbstract = this.consume().literal.startsWith("下");
           break;
         } else {
           nameNode = tNode;
         }
       } else if (t.type === tok.KW_CLASS) {
-        this.consume();
+        isAbstract = this.consume().literal.startsWith("下");
         break;
       } else {
         this.consume();
@@ -353,7 +354,7 @@ export class Parser {
     if (this.peek() && this.peek()!.type === tok.COLON) this.consume(); // :
 
     const block = this.parseBlock();
-    return { type: "ClassDeclaration", name: nameNode!, baseClass, interfaces, body: block.statements };
+    return { type: "ClassDeclaration", name: nameNode!, baseClass, interfaces, body: block.statements, isAbstract };
   }
 
   private parseFunctionDecl(): ast.Statement {

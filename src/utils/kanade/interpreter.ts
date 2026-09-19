@@ -158,6 +158,7 @@ function newBuiltinErrorClass(cfg: LangConfig): ast.ClassDeclaration {
     name: { type: "TypeReference", name: cfg.builtinErrorClass },
     baseClass: null,
     interfaces: [],
+    isAbstract: false,
     body: [
       {
         type: "VariableDeclaration",

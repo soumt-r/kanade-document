@@ -186,7 +186,11 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
     case "NewExpression": {
       const clsName = expr.class.name;
       const cls = i.classes[clsName];
-      if (!cls) throw new RuntimeError(Codes.ClassNotFound, clsName);
+      if (!cls) {
+        if (i.interfaces[clsName]) throw new RuntimeError(Codes.Interface, clsName);
+        throw new RuntimeError(Codes.ClassNotFound, clsName);
+      }
+      if (cls.isAbstract) throw new RuntimeError(Codes.AbstractClass, clsName);
       const obj = new HajaObject(clsName);
 
       for (const stmt of cls.body) {
