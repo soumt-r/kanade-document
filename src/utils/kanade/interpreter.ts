@@ -24,6 +24,8 @@ export class KanadeInterpreter {
   output: string[] = [];
   config: LangConfig;
   nativeModules: Record<string, NativeModule> = {};
+  // Modules hana has but a browser cannot run (files, sockets): importing one is an error.
+  nativeOnlyModules = new Set<string>();
   inlineBuffer = "";
   inputCallback?: (promptText: string) => Promise<string>;
   outputCallback?: (msg: string) => void;
@@ -51,6 +53,10 @@ export class KanadeInterpreter {
 
   registerNativeModule(name: string, module: NativeModule): void {
     this.nativeModules[name] = module;
+  }
+
+  registerNativeOnlyModule(name: string): void {
+    this.nativeOnlyModules.add(name);
   }
 
   async run(): Promise<string> {

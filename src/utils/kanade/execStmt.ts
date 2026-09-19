@@ -109,6 +109,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       // third-party packages. Unknown modules and unknown members report the
       // same error Go does when nothing matches.
       if (!stmt.isBuiltin) throw new RuntimeError(Codes.ImportUnsupported);
+      if (i.nativeOnlyModules.has(stmt.module)) throw new RuntimeError(Codes.ImportNativeOnly, stmt.module);
       const module = Object.hasOwn(i.nativeModules, stmt.module) ? i.nativeModules[stmt.module] : undefined;
       if (!module) throw new RuntimeError(Codes.ImportPackageNotFound, stmt.module);
       if (stmt.all) {

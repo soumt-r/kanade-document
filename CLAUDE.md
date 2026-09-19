@@ -33,7 +33,7 @@ Consult these guides before working on related tasks:
 
 `src/utils/kanade/stdNames.ts` も `../hana` (Go) の `std` 名前表から**生成されるファイル**です。直接編集せず、`hana/std` を編集してから
 `cd ../hana && go run ./cmd/stdgen -haja ../haja-docs/src/utils/haja/stdNames.ts -kanade ../kanade-docs/src/utils/kanade/stdNames.ts`
-で再生成します (`-check` で最新かどうか確認)。新しいネイティブ関数の動作は `stdImpls.ts` の `nativeImpls` に ID で実装します (Go の `hana/std/stdimpl` を手でミラーしたものです。先に Go を直してここを合わせてください。`compare_tests.ts` の「표준:」ケースが結果を比べます)。
+で再生成します (`-check` で最新かどうか確認)。`stdNames.ts` に `nativeOnly: true` が付いたモジュールは hana の実行器でしか使えないもの (ファイルなど) なので `stdImpls.ts` には実装しません。`stdlib.ts` が名前だけを覚えておき、インポートされると `ImportNativeOnly` エラーを出します。新しいネイティブ関数の動作は `stdImpls.ts` の `nativeImpls` に ID で実装します (Go の `hana/std/stdimpl` を手でミラーしたものです。先に Go を直してここを合わせてください。`compare_tests.ts` の「표준:」ケースが結果を比べます)。
 
 構文エラーも Go と同じです。パーサーが未知のトークン・文字を `parser.diagnostics`(行・列)に集め、`index.ts`(実行)と `kanadeLSP.ts`(エディタの下線)が `errs.ts` の `syntaxError`/`message` で同じ文言を出します。文言は `hana/errs` の `SyntaxError.*` コードから生成され、`compare_tests.ts` が Go と比較します。
 
