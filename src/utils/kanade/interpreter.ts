@@ -132,15 +132,24 @@ export class KanadeInterpreter {
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
       return "{" + entries.join(", ") + "}";
     }
-    if (typeof val === "number") {
-      // Go 쪽은 %v/%g가 3628800 같은 값도 과학적 표기법으로 바꿔버려서
-      // strconv.FormatFloat(v, 'f', -1, 64)로 직접 처리해야 했지만, JS의
-      // 기본 String(number)는 1e21 미만에서는 과학적 표기법을 쓰지 않으므로
-      // 별도 처리가 필요 없다.
-      return String(val);
-    }
+    if (typeof val === "number") return plainNumber(val);
     return String(val);
   }
+}
+
+// plainNumber prints a number the way Go's FormatFloat(v, 'f', -1, 64) does: the
+// shortest digits that read back exactly, never in scientific notation (JS's
+// String() switches to it from 1e21 up and below 1e-6).
+function plainNumber(n: number): string {
+  const s = String(n);
+  const m = /^(-?)(\d+)(?:\.(\d+))?e([+-]\d+)$/.exec(s);
+  if (!m) return s;
+  const [, sign, whole, frac = "", exp] = m;
+  const digits = whole + frac;
+  const shift = Number(exp) + whole.length;
+  if (shift >= digits.length) return sign + digits + "0".repeat(shift - digits.length);
+  if (shift > 0) return sign + digits.slice(0, shift) + "." + digits.slice(shift);
+  return sign + "0." + "0".repeat(-shift) + digits;
 }
 
 // newBuiltinErrorClass는 모든 인터프리터 인스턴스에 기본으로 존재하는 [오류] 클래스를
