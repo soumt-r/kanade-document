@@ -283,3 +283,11 @@
     letter-spacing: 0;
   }
 }
+
+/* 놀이터 서랍이 열리면 본문이 화면의 절반이 되므로, 좁은 자리를 본문에 주려고 목차는 접는다. */
+.drawer-open .doc-aside {
+  display: none;
+}
+.drawer-open .doc-shell {
+  display: block;
+}

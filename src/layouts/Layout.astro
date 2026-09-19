@@ -11,6 +11,7 @@ const path = Astro.url.pathname;
 const width = customMaxWidth === 'max-w-3xl' && path === '/' ? 'max-w-5xl' : customMaxWidth;
 const navItems = [
   { text: 'ドキュメント', href: '/docs/intro', active: path.startsWith('/docs') },
+  { text: 'プレイグラウンド', href: '/playground', active: path.startsWith('/playground') },
   { text: 'GitHub', href: 'https://github.com/soumt-r/kanade-document', external: true, active: false },
 ];
 ---

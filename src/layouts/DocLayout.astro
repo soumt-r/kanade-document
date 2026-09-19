@@ -46,8 +46,8 @@ const navItems = [
 ---
 
 <Layout title={`${frontmatter.title} | カナデ(Kanade) 言語`} customMaxWidth="max-w-6xl">
-  <div class="flex flex-col md:flex-row gap-12 lg:gap-16 mt-6">
-    <aside class="w-full md:w-56 shrink-0 border-b md:border-b-0 border-rule pb-8 md:pb-0">
+  <div class="doc-shell flex flex-col md:flex-row gap-12 lg:gap-16 mt-6">
+    <aside class="doc-aside w-full md:w-56 shrink-0 border-b md:border-b-0 border-rule pb-8 md:pb-0">
       <nav class="md:sticky md:top-10 md:max-h-[calc(100vh-5rem)] md:overflow-y-auto space-y-9 md:pr-2" aria-label="目次">
         {navItems.map((section) => (
           <div>
@@ -185,6 +185,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
           }
           drawer.classList.remove('w-0');
           drawer.classList.add('w-full', 'md:w-1/2');
+          document.documentElement.classList.add('drawer-open');
           document.body.style.width = window.innerWidth > 768 ? '50%' : '100%';
           
           if (!animate) {
@@ -202,6 +203,7 @@ const createInputCallback = (outputContainer) => (promptText) => {
         const closeDrawer = () => {
           drawer.classList.add('w-0');
           drawer.classList.remove('w-full', 'md:w-1/2');
+          document.documentElement.classList.remove('drawer-open');
           document.body.style.width = '100%';
           sessionStorage.setItem('kanade-playground-open', 'false');
         };
