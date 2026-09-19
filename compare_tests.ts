@@ -24,14 +24,15 @@ function extractKanadeBlocks(markdown: string): string[] {
 // 에러도 비교한다: 실행이 에러로 끝나면 그 문구(현지화된 최종 메시지)를 출력 뒤에
 // 붙여서, TS 엔진이 Go 엔진과 같은 문구를 내는지 잡아낸다. Go 쪽은 stderr의
 // "ランタイムエラー: <メッセージ>" 줄에서 같은 메시지를 뽑는다.
-async function runTypeScriptEngine(code: string): Promise<string> {
+async function runTypeScriptEngine(code: string, stdin = ''): Promise<string> {
     let output = "";
     let error = "";
     try {
         const lexer = new Lexer(code);
         const parser = new Parser(lexer.tokens);
         const ast = parser.parseProgram();
-        const interpreter = new Interpreter(ast, async () => "");
+        const lines = stdin === '' ? [] : stdin.replace(/\n$/, '').split('\n');
+        const interpreter = new Interpreter(ast, async () => lines.shift() ?? "");
         registerStandardLibrary(interpreter);
 
         interpreter.outputCallback = (msg) => {
@@ -48,14 +49,14 @@ function withError(output: string, error: string): string {
     return error ? `${output}\n!! ${error}` : output;
 }
 
-function runGoEngine(code: string): string {
+function runGoEngine(code: string, stdin = ''): string {
     // .knd 확장자여야 hana.exe가 Kanade 렉서/파서로 실행한다(cmd/run.go의
     // isKanade := strings.HasSuffix(filename, ".knd")).
     const tempFile = 'temp_test.knd';
     writeFileSync(tempFile, code);
 
     try {
-        const result = execSync(`${GO_EXECUTABLE} run ${tempFile}`, { stdio: ['pipe', 'pipe', 'pipe'] });
+        const result = execSync(`${GO_EXECUTABLE} run ${tempFile}`, { input: stdin, stdio: ['pipe', 'pipe', 'pipe'] });
         unlinkSync(tempFile);
         return result.toString().trim();
     } catch (e: any) {
@@ -80,12 +81,17 @@ async function walk(dir: string, callback: (path: string) => Promise<void>) {
 }
 
 // 문서 예제에는 없지만 두 엔진이 같아야 하는 동작: 표준 라이브러리(std) 임포트.
-const EXTRA_CASES: { name: string; code: string }[] = [
+const EXTRA_CASES: { name: string; code: string; stdin?: string }[] = [
     { name: "std 임포트", code: "【数学】から〈切り上げ〉を持ってこよう\n枠「{〈切り上げ〉(3.2)}」を出力しよう" },
     { name: "std 임포트 (별칭)", code: "【数学】から〈切り捨て〉を〈床〉に持ってこよう\n枠「{〈床〉(3.9)}」を出力しよう" },
     { name: "없는 모듈", code: "【なにもない】から〈関数〉を持ってこよう" },
     { name: "없는 함수", code: "【数学】から〈ない関数〉を持ってこよう" },
     { name: "끝없는 재귀", code: "〈f〉を作ろう ():\n    〈f〉()を実行しよう\n〈f〉()を実行しよう" },
+    { name: "입력 (문자열)", code: "『名前』を【文字列】で入力してもらおう\n『名前』を出力しよう", stdin: "田中\n" },
+    { name: "입력 (숫자, 공백 허용)", code: "『年齢』を【数字】で入力してもらおう\n枠「{『年齢』 + 1}」を出力しよう", stdin: " 20 \n" },
+    { name: "입력 (논리)", code: "『はい』を【論理】で入力してもらおう\n『はい』を出力しよう", stdin: "真\n" },
+    { name: "입력 (숫자 실패)", code: "『年齢』を【数字】で入力してもらおう\n『年齢』を出力しよう", stdin: "二十\n" },
+    { name: "입력 (빈 입력은 숫자가 아님)", code: "『年齢』を【数字】で入力してもらおう\n『年齢』を出力しよう", stdin: "" },
 ];
 
 // 구문 오류 문구: TS 엔진의 진단을 현지화한 문장이 hana가 보여 주는 문장과 같아야 한다.
@@ -140,8 +146,8 @@ async function main() {
 
     for (const c of EXTRA_CASES) {
         total++;
-        const tsOutput = await runTypeScriptEngine(c.code);
-        const goOutput = runGoEngine(c.code);
+        const tsOutput = await runTypeScriptEngine(c.code, c.stdin);
+        const goOutput = runGoEngine(c.code, c.stdin);
         if (tsOutput === goOutput) {
             passed++;
         } else {

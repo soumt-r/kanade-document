@@ -146,12 +146,14 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
 
       let val: unknown = userInput;
       if (typeAnn === "数字") {
-        const num = Number(userInput);
-        if (Number.isNaN(num)) throw new RuntimeError(Codes.InputToNumberFailed, userInput);
-        val = num;
+        // Strict like hana's conv.ParseInput: spaces around are ignored, and nothing
+        // JS-lenient ("" -> 0, "0x10" -> 16) is accepted.
+        const trimmed = userInput.trim();
+        if (!/^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(trimmed)) throw new RuntimeError(Codes.InputToNumberFailed, userInput);
+        val = Number(trimmed);
       } else if (typeAnn === "論理") {
-        if (userInput === i.config.trueString) val = true;
-        else if (userInput === i.config.falseString) val = false;
+        if (userInput.trim() === i.config.trueString) val = true;
+        else if (userInput.trim() === i.config.falseString) val = false;
         else throw new RuntimeError(Codes.InputToBooleanFailed, userInput);
       }
 
