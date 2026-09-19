@@ -36,7 +36,7 @@ export function kanadeTheme(opts: { height?: string; maxHeight?: string; fontSiz
     EditorView.theme({
       "&": {
         height: opts.height ?? "auto",
-        maxHeight: opts.maxHeight,
+        ...(opts.maxHeight ? { maxHeight: opts.maxHeight } : {}),
         fontSize: opts.fontSize ?? "14.5px",
         color: ink,
         backgroundColor: "#ffffff",

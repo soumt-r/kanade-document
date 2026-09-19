@@ -30,3 +30,7 @@ Consult these guides before working on related tasks:
 エンジンでエラーを投げるときは `throw new RuntimeError(Codes.X, ...)` (`errs.ts`) を使い、
 日本語・韓国語の文字列リテラルを直接書かないでください。
 `compare_tests.ts` は Go エンジンと出力だけでなく最終的なエラーメッセージも比較します。
+
+`src/utils/kanade/stdNames.ts` も `../hana` (Go) の `std` 名前表から**生成されるファイル**です。直接編集せず、`hana/std` を編集してから
+`cd ../hana && go run ./cmd/stdgen -haja ../haja-docs/src/utils/haja/stdNames.ts -kanade ../kanade-docs/src/utils/kanade/stdNames.ts`
+で再生成します (`-check` で最新かどうか確認)。新しいネイティブ関数の動作は `stdlib.ts` の `nativeImpls` に ID で実装します。

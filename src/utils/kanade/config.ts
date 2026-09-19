@@ -10,9 +10,6 @@ export interface LangConfig {
   builtinToNumber: string;
   builtinToCode: string;
   builtinToText: string;
-  pkgMath: string;
-  mathCeil: string;
-  mathFloor: string;
   nativePrefix: string;
   defaultItemName: string;
   defaultIndexName: string;
@@ -68,9 +65,6 @@ export const JapaneseConfig: LangConfig = {
   builtinToNumber: "数字に",
   builtinToCode: "コードに",
   builtinToText: "文字に",
-  pkgMath: "数学",
-  mathCeil: "切り上げ",
-  mathFloor: "切り捨て",
   nativePrefix: "ネイティブ_",
   defaultItemName: "アイテム",
   defaultIndexName: "インデックス",
