@@ -2,6 +2,8 @@
 // Edit the Go catalogs (errs/ko.go, ja.go, en.go) and regenerate.
 
 export const Codes = {
+  UnexpectedToken: "SyntaxError.UnexpectedToken",
+  UnexpectedEnd: "SyntaxError.UnexpectedEnd",
   ThisNotBound: "ReferenceError.ThisNotBound",
   SuperOutsideMethod: "ReferenceError.SuperOutsideMethod",
   StaticOutsideMethod: "ReferenceError.StaticOutsideMethod",
@@ -63,6 +65,8 @@ export type Catalog = Record<Code, string>;
 
 export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
   en: {
+    [Codes.UnexpectedToken]: "Unexpected '%[3]s' at line %[1]d, column %[2]d.",
+    [Codes.UnexpectedEnd]: "Unexpected end of input at line %[1]d.",
     [Codes.ThisNotBound]: "'this' is not bound.",
     [Codes.SuperOutsideMethod]: "Cannot use 'super' outside of a class method.",
     [Codes.StaticOutsideMethod]: "Cannot use a static reference outside of a class method.",
@@ -118,6 +122,8 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "Cannot convert '%s' to true/false.",
   },
   ko: {
+    [Codes.UnexpectedToken]: "%[1]d번째 줄 %[2]d번째 글자의 '%[3]s'를 이해할 수 없어요.",
+    [Codes.UnexpectedEnd]: "%[1]d번째 줄에서 문장이 끝나지 않았어요.",
     [Codes.ThisNotBound]: "메서드 밖에서는 '나'를 쓸 수 없어요.",
     [Codes.SuperOutsideMethod]: "'부모'는 클래스의 메서드 안에서만 쓸 수 있어요.",
     [Codes.StaticOutsideMethod]: "'우리'는 클래스의 메서드 안에서만 쓸 수 있어요.",
@@ -173,6 +179,8 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "'%s'을(를) 참/거짓으로 바꿀 수 없어요.",
   },
   ja: {
+    [Codes.UnexpectedToken]: "%[1]d行目、%[2]d文字目の「%[3]s」を解釈できません。",
+    [Codes.UnexpectedEnd]: "%[1]d行目で文が途中で終わっています。",
     [Codes.ThisNotBound]: "メソッドの外では『私』は使えません。",
     [Codes.SuperOutsideMethod]: "『親』はクラスのメソッドの中でのみ使えます。",
     [Codes.StaticOutsideMethod]: "『私たち』はクラスのメソッドの中でのみ使えます。",
