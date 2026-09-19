@@ -2,6 +2,7 @@
 // Edit the Go catalogs (errs/ko.go, ja.go, en.go) and regenerate.
 
 export const Codes = {
+  UnknownOperator: "TypeError.UnknownOperator",
   NativeListNumbers: "TypeError.NativeListNumbers",
   NativeListStrings: "TypeError.NativeListStrings",
   ListNotSortable: "TypeError.ListNotSortable",
@@ -103,6 +104,7 @@ export type Catalog = Record<Code, string>;
 
 export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
   en: {
+    [Codes.UnknownOperator]: "The operator '%s' is not supported here.",
     [Codes.NativeListNumbers]: "Argument %d must be a list of numbers.",
     [Codes.NativeListStrings]: "Argument %d must be a list of strings.",
     [Codes.ListNotSortable]: "Only lists of all numbers or all strings can be sorted.",
@@ -198,6 +200,7 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "Cannot convert '%s' to true/false.",
   },
   ko: {
+    [Codes.UnknownOperator]: "'%s'은(는) 여기서 쓸 수 없는 연산자예요.",
     [Codes.NativeListNumbers]: "%d번째 인자는 숫자만 든 목록이어야 해요.",
     [Codes.NativeListStrings]: "%d번째 인자는 문자열만 든 목록이어야 해요.",
     [Codes.ListNotSortable]: "숫자끼리 또는 문자열끼리만 정렬할 수 있어요.",
@@ -293,6 +296,7 @@ export const catalogs: Record<"en" | "ko" | "ja", Catalog> = {
     [Codes.InputToBooleanFailed]: "'%s'을(를) 참/거짓으로 바꿀 수 없어요.",
   },
   ja: {
+    [Codes.UnknownOperator]: "『%s』はここでは使えない演算子です。",
     [Codes.NativeListNumbers]: "%d番目の引数は数字だけのリストでなければなりません。",
     [Codes.NativeListStrings]: "%d番目の引数は文字列だけのリストでなければなりません。",
     [Codes.ListNotSortable]: "数字同士、または文字列同士のリストだけ並べ替えられます。",

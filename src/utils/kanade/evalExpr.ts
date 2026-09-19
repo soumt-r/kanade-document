@@ -611,7 +611,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         case "<=":
           break;
         default:
-          return null;
+          throw new RuntimeError(Codes.UnknownOperator, expr.operator);
       }
 
       // Null-safe (Runtime spec 2.4): only the equality operators may see 비어있음.
