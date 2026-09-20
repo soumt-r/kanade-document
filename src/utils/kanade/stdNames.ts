@@ -37,6 +37,14 @@ export const stdModules: readonly StdModule[] = [
     ],
   },
   {
+    id: "csv",
+    name: "CSV",
+    functions: [
+      { id: "csv.parse", name: "パース" },
+      { id: "csv.stringify", name: "文字列化" },
+    ],
+  },
+  {
     id: "random",
     name: "乱数",
     functions: [

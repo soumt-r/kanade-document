@@ -131,6 +131,102 @@ function jsonStringify(...args: unknown[]): unknown {
   return writeJSON(args[0], indent, 0);
 }
 
+// ---- csv
+
+function csvDelimiter(args: unknown[], i: number): string {
+  if (i >= args.length) return ",";
+  const s = stringArg(args, i);
+  const chars = Array.from(s);
+  if (chars.length !== 1 || chars[0] === '"' || chars[0] === "\n" || chars[0] === "\r" || chars[0] === "\ufffd") {
+    throw new RuntimeError(Codes.CSVDelimiter);
+  }
+  return chars[0];
+}
+
+function csvParse(...args: unknown[]): unknown {
+  between(args, 1, 2);
+  const text = stringArg(args, 0);
+  const delim = csvDelimiter(args, 1);
+  const runes = Array.from(text.startsWith("\ufeff") ? text.slice(1) : text);
+  const rows: unknown[] = [];
+  let row: unknown[] = [];
+  let field = "";
+  let started = false;
+  let quoted = false;
+  let inQuotes = false;
+  let afterQuote = false;
+
+  const endField = () => {
+    row.push(field);
+    field = "";
+    started = false;
+    quoted = false;
+    afterQuote = false;
+  };
+  const endRow = () => {
+    endField();
+    rows.push(row);
+    row = [];
+  };
+
+  for (let i = 0; i < runes.length; i++) {
+    const c = runes[i];
+    if (inQuotes) {
+      if (c !== '"') {
+        field += c;
+      } else if (i + 1 < runes.length && runes[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else {
+        inQuotes = false;
+        afterQuote = true;
+      }
+    } else if (c === delim) {
+      endField();
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && i + 1 < runes.length && runes[i + 1] === "\n") i++;
+      endRow();
+    } else if (afterQuote) {
+      throw new RuntimeError(Codes.CSVInvalid);
+    } else if (c === '"' && !started) {
+      inQuotes = true;
+      quoted = true;
+      started = true;
+    } else {
+      field += c;
+      started = true;
+    }
+  }
+  if (inQuotes) throw new RuntimeError(Codes.CSVInvalid);
+  if (started || quoted || row.length > 0) endRow();
+  return rows;
+}
+
+function csvCell(v: unknown): string {
+  if (typeof v === "string") return v;
+  if (v === null || v === undefined) return "";
+  if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  throw new RuntimeError(Codes.CSVUnsupported);
+}
+
+function csvStringify(...args: unknown[]): unknown {
+  between(args, 1, 2);
+  const rows = listArg(args, 0);
+  const delim = csvDelimiter(args, 1);
+  const lines: string[] = [];
+  for (const r of rows) {
+    if (!Array.isArray(r) || r.length === 0) throw new RuntimeError(Codes.CSVUnsupported);
+    const cells = r.map((cell) => {
+      const text = csvCell(cell);
+      const needsQuotes =
+        text.includes('"') || text.includes("\r") || text.includes("\n") || text.includes(delim) || (text === "" && r.length === 1);
+      return needsQuotes ? '"' + text.split('"').join('""') + '"' : text;
+    });
+    lines.push(cells.join(delim));
+  }
+  return lines.join("\n");
+}
+
 // ---- random
 
 function randomFloat(...args: unknown[]): unknown {
@@ -981,6 +1077,8 @@ export const nativeImpls: Record<string, Impl> = {
 
   "json.parse": jsonParse,
   "json.stringify": jsonStringify,
+  "csv.parse": csvParse,
+  "csv.stringify": csvStringify,
 
   "random.float": randomFloat,
   "random.int": randomInt,
