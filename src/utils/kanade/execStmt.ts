@@ -280,7 +280,6 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           break;
         }
       }
-      if (!matched) throw new RuntimeError(Codes.NoMatch, typeof val === "string" ? `"${val}"` : i.formatValue(val));
       return;
     }
     case "FallthroughStatement":
