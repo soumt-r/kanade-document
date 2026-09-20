@@ -117,7 +117,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       }
       for (const item of stmt.items) {
         const member = Object.hasOwn(module, item.name) ? module[item.name] : undefined;
-        if (!member) throw new RuntimeError(Codes.ImportPackageNotFound, stmt.module);
+        if (!member) throw new RuntimeError(Codes.ImportTargetNotFound, stmt.module, item.name);
         env.declare(ast.importBindName(item), member);
       }
       return;
