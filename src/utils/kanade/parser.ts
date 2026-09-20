@@ -20,6 +20,12 @@ export interface ParseDiagnostic {
   literal: string; // empty means the parser ran off the end of the input
 }
 
+// endsCondition: a token that can follow a complete condition — the close of an
+// enclosing group, the block's colon, 그리고/또는, or the trailing 라면.
+function endsCondition(t: string): boolean {
+  return t === tok.RPAREN || t === tok.COLON || t === tok.KW_AND || t === tok.KW_OR || t === tok.IDENT;
+}
+
 export class Parser {
   private tokens: Token[];
   private pos = 0;
@@ -489,15 +495,26 @@ export class Parser {
   // parseConditionOperand: a parenthesized (possibly compound) condition, or
   // one comparison in SVO (`A 가 B 보다 크다`) or SOV (`A B 크다`) word order.
   private parseConditionOperand(): ast.Expression {
-    let cond: ast.Expression;
-
     if (this.peek() && this.peek()!.type === tok.LPAREN) {
+      const start = this.pos;
+      const diagCount = this.diags.length;
       this.consume();
-      cond = this.parseCondition();
+      const cond = this.parseCondition();
       if (this.peek() && this.peek()!.type === tok.RPAREN) this.consume();
-      return cond;
+      const after = this.peek();
+      if (after === null || endsCondition(after.type)) return cond;
+      // The group was not a whole condition but the start of an expression:
+      // `(('x' % 2) == 0)`, `(('x' * 2) + 1) >= 9`. Read it again as one.
+      this.pos = start;
+      this.diags.length = diagCount;
     }
-    cond = this.parseExpression();
+    return this.finishComparison(this.parseExpression());
+  }
+
+  // finishComparison completes a comparison whose left side has been parsed: the
+  // operator and right side after it, in SVO (`A 가 B 보다 크다`) or SOV word order.
+  private finishComparison(left: ast.Expression): ast.Expression {
+    let cond = left;
     if (this.peek() && this.peek()!.type === tok.PARTICLE) this.consume();
 
     const next = this.peek();
