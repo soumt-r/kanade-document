@@ -41,7 +41,7 @@ export class Environment {
     return this.parent ? this.parent.ownerOf(name) : null;
   }
 
-  private isConst(name: string): boolean {
+  isConst(name: string): boolean {
     if (this.constants.has(name)) return true;
     if (this.parent) return this.parent.isConst(name);
     return false;

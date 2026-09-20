@@ -16,7 +16,7 @@ import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { evaluateNode, execBlock } from "./evalExpr";
-import { popFromList, assignListBack } from "./listOps";
+import { popFromList, pushOnto, takeBack, checkListPush, requireMutable } from "./listOps";
 import { findInClassChain, thrownValueMatchesType } from "./classLookup";
 import { HajaObject, ClassReference } from "./object";
 import { assignVariable, checkDeclaredType, checkField, requireBool } from "./types";
@@ -84,17 +84,23 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
     case "ListPushStatement": {
       const targetVal = await evaluateNode(i, stmt.target, env);
       if (!Array.isArray(targetVal)) throw new RuntimeError(Codes.NotAList);
+      requireMutable(env, stmt.target);
       const pushVal = await evaluateNode(i, stmt.value, env);
-      const newList = stmt.position === "front" ? [pushVal, ...targetVal] : [...targetVal, pushVal];
-      await assignListBack(i, stmt.target, newList, env);
+      pushOnto(targetVal, pushVal, stmt.position);
+      try {
+        await checkListPush(i, stmt.target, targetVal, env);
+      } catch (e) {
+        takeBack(targetVal, stmt.position);
+        throw e;
+      }
       return;
     }
     case "ListPopStatement": {
       const targetVal = await evaluateNode(i, stmt.target, env);
       if (!Array.isArray(targetVal)) throw new RuntimeError(Codes.NotAList);
+      requireMutable(env, stmt.target);
       if (targetVal.length === 0) throw new RuntimeError(Codes.ListEmpty);
-      const [, newList] = popFromList(targetVal, stmt.position);
-      await assignListBack(i, stmt.target, newList, env);
+      popFromList(targetVal, stmt.position);
       return;
     }
     case "ReturnStatement": {
@@ -194,7 +200,8 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
 
       if (typeof listVal === "string") listVal = Array.from(listVal);
       if (!Array.isArray(listVal)) throw new RuntimeError(Codes.NotIterable);
-      for (const item of listVal) {
+      // a loop walks the list as it was when the loop began
+      for (const item of Array.from(listVal)) {
         const loopEnv = new Environment(env);
         loopEnv.declare(itemName, item);
         try {

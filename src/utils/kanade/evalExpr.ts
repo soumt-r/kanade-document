@@ -13,7 +13,7 @@ import { checkInitialField, checkReturn, describeType, requireBool } from "./typ
 import { Environment } from "./env";
 import { executeStmt } from "./execStmt";
 import { bindParams } from "./params";
-import { popFromList, assignListBack } from "./listOps";
+import { popFromList, requireMutable } from "./listOps";
 import { findInClassChain, classIsOrExtends } from "./classLookup";
 import {
   HajaObject,
@@ -141,7 +141,8 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
     // 설계라, 메서드 형태로 남은 건 비우기 하나뿐.
     if (callee.funcName === i.config.listClearMethod) {
       if (args.length !== 0) throw new RuntimeError(Codes.ArgCountExact, 0);
-      if (callee.target !== null) await assignListBack(i, callee.target, [], env);
+      if (callee.target !== null) requireMutable(env, callee.target);
+      callee.list.length = 0;
       return null;
     }
     throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
@@ -393,10 +394,9 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
     case "ListPopExpression": {
       const targetVal = await evaluateNode(i, expr.target, env);
       if (!Array.isArray(targetVal)) throw new RuntimeError(Codes.NotAList);
+      requireMutable(env, expr.target);
       if (targetVal.length === 0) throw new RuntimeError(Codes.ListEmpty);
-      const [popped, newList] = popFromList(targetVal, expr.position);
-      await assignListBack(i, expr.target, newList, env);
-      return popped;
+      return popFromList(targetVal, expr.position);
     }
     case "DictLiteral": {
       const dict = new Map<unknown, unknown>();

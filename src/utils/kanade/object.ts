@@ -41,9 +41,7 @@ export class BoundStringMethod {
 
 export class BoundListMethod {
   // target is the MemberExpression's Object expression the list came from —
-  // needed because a mutating list method (비우기) has to write the result
-  // back to wherever it came from (mirrors assignListBack's own doc comment
-  // in listOps.ts, kept here for the same reason Go's object.go keeps it).
+  // a list held by a constant variable cannot be emptied (mirrors Go's object.go).
   constructor(
     public list: unknown[],
     public funcName: string,

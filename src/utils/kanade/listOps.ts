@@ -1,34 +1,48 @@
-// Mirrors hana/vm/list_ops.go. Go needs assignListBack because a Go
-// []interface{} isn't a stable reference across append/slice ops; a JS Array
-// mutates in place, so this port could technically mutate directly — but it
-// keeps the same "recompute then write back to the binding" shape as Go
-// anyway, since eval_expr.go's ListPopExpression/exec_stmt.go's
-// ListPush/PopStatement all reuse this exact helper and diverging here would
-// make those call sites harder to compare against the Go source line-by-line.
+// Mirrors hana/vm/list_ops.go. A list is an object: pushing, popping and emptying change the
+// list itself (a JS Array is a reference, so every variable, parameter and field holding it
+// sees the change), and what is left to do afterwards is to test the value that was put on
+// against the type the variable or field was declared with — the caller takes the push back
+// when it does not fit.
 import type * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { evaluateNode } from "./evalExpr";
 import { HajaObject } from "./object";
+import { RuntimeError, Codes } from "./errs";
 import { checkDeclaredType, checkField } from "./types";
 
-export function popFromList(list: unknown[], position: "front" | "back"): [unknown, unknown[]] {
-  if (position === "front") return [list[0], list.slice(1)];
-  return [list[list.length - 1], list.slice(0, -1)];
+// requireMutable refuses to change the list a constant (고정하자) variable holds
+// (Runtime spec 2.1 counts push, pop and emptying among the operations that change one).
+export function requireMutable(env: Environment, target: ast.Expression): void {
+  if (target.type === "Identifier" && env.isConst(target.value)) {
+    throw new RuntimeError(Codes.ConstantAssignment, target.value);
+  }
 }
 
-export async function assignListBack(i: KanadeInterpreter, target: ast.Expression, newList: unknown[], env: Environment): Promise<void> {
+export async function checkListPush(i: KanadeInterpreter, target: ast.Expression, list: unknown[], env: Environment): Promise<void> {
   if (target.type === "Identifier") {
-    checkDeclaredType(i, env, target.value, newList);
-    const [, err] = env.assign(target.value, newList);
-    if (err) throw err;
+    checkDeclaredType(i, env, target.value, list);
     return;
   }
   if (target.type === "MemberExpression") {
     const obj = await evaluateNode(i, target.object, env);
     if (obj instanceof HajaObject && target.property.type === "Identifier") {
-      checkField(i, obj, target.property.value, newList);
-      obj.props[target.property.value] = newList;
+      checkField(i, obj, target.property.value, list);
     }
   }
+}
+
+// pushOnto puts value on an end of list; takeBack undoes that.
+export function pushOnto(list: unknown[], value: unknown, position: "front" | "back"): void {
+  if (position === "front") list.unshift(value);
+  else list.push(value);
+}
+
+export function takeBack(list: unknown[], position: "front" | "back"): void {
+  if (position === "front") list.shift();
+  else list.pop();
+}
+
+export function popFromList(list: unknown[], position: "front" | "back"): unknown {
+  return position === "front" ? list.shift() : list.pop();
 }
