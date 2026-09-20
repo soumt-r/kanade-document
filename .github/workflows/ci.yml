@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The checks run against the current hana engine (github.com/soumt-r/hana), checked out
+# next to this repository because compare_tests.ts looks for ../hana.
+jobs:
+  check:
+    name: Docs run and match the engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: kanade-docs
+      - uses: actions/checkout@v7
+        with:
+          repository: soumt-r/hana
+          path: hana
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: hana/go.mod
+          cache-dependency-path: hana/go.sum
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: kanade-docs/package-lock.json
+      - name: Build hana
+        working-directory: hana
+        run: go build -o hana .
+      - name: Every code block in the docs runs
+        working-directory: hana
+        run: go run ./cmd/doctest ../kanade-docs/src/pages/docs
+      - name: The browser engine prints what hana prints
+        working-directory: kanade-docs
+        run: |
+          npm ci
+          npx tsx compare_tests.ts
+      - name: The site builds
+        working-directory: kanade-docs
+        run: npm run build
