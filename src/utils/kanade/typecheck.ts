@@ -104,6 +104,13 @@ export function checkType(names: TypeNames, annotation: string, name: string, v:
   }
 }
 
+// checkReturnType is checkType for the value a function returns.
+export function checkReturnType(names: TypeNames, annotation: string, fn: string, v: unknown, host: TypeHost): void {
+  if (!accepts(parseType(annotation), names, v, host)) {
+    throw new RuntimeError(Codes.ReturnTypeMismatch, fn, annotation, describe(names, v, host));
+  }
+}
+
 // checkArgumentType is checkType for a function parameter.
 export function checkArgumentType(names: TypeNames, annotation: string, name: string, v: unknown, host: TypeHost): void {
   if (!accepts(parseType(annotation), names, v, host)) {

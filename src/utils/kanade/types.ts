@@ -5,7 +5,7 @@ import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { HajaObject } from "./object";
-import { checkType, checkArgumentType, describe, type TypeHost, type TypeNames } from "./typecheck";
+import { checkType, checkArgumentType, checkReturnType, describe, type TypeHost, type TypeNames } from "./typecheck";
 import { RuntimeError, Codes } from "./errs";
 
 class InterpreterTypeHost implements TypeHost {
@@ -116,6 +116,12 @@ export function declareParam(i: KanadeInterpreter, env: Environment, param: ast.
     return;
   }
   env.declare(param.name.value, val);
+}
+
+// checkReturn enforces a function's declared return type, if it wrote one.
+export function checkReturn(i: KanadeInterpreter, fn: ast.FunctionDeclaration, val: unknown): unknown {
+  if (fn.returnType) checkReturnType(i.config.types, fn.returnType.name, fn.name.value, val, host(i));
+  return val;
 }
 
 // checkInitialField checks a field's default value when an object is created.

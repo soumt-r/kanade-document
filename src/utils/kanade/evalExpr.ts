@@ -9,7 +9,7 @@
 import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { MAX_CALL_DEPTH } from "./config";
-import { checkInitialField, describeType, requireBool } from "./types";
+import { checkInitialField, checkReturn, describeType, requireBool } from "./types";
 import { Environment } from "./env";
 import { executeStmt } from "./execStmt";
 import { bindParams } from "./params";
@@ -73,7 +73,7 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
     if (funcDecl === null) throw new RuntimeError(Codes.GlobalFunctionNotFound, funcName);
     const funcEnv = new Environment(i.globalEnv);
     await bindParams(i, funcDecl.params, args, funcEnv);
-    return await execBlock(i, funcDecl.body.statements, funcEnv);
+    return checkReturn(i, funcDecl, await execBlock(i, funcDecl.body.statements, funcEnv));
   }
 
   if (callee instanceof BuiltinFunction) {
@@ -84,7 +84,7 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
     const fnDecl = callee as ast.FunctionDeclaration;
     const callEnv = new Environment(i.globalEnv);
     await bindParams(i, fnDecl.params, args, callEnv);
-    return await execBlock(i, fnDecl.body.statements, callEnv);
+    return checkReturn(i, fnDecl, await execBlock(i, fnDecl.body.statements, callEnv));
   }
 
   if (callee instanceof BoundStaticMethod) {
@@ -100,7 +100,7 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
     const funcEnv = new Environment(i.globalEnv);
     funcEnv.declare("__selfClass__", callee.className);
     await bindParams(i, funcDecl.params, args, funcEnv);
-    return await execBlock(i, funcDecl.body.statements, funcEnv);
+    return checkReturn(i, funcDecl, await execBlock(i, funcDecl.body.statements, funcEnv));
   } else if (callee instanceof BoundStringMethod) {
     // 인자 개수/타입을 먼저 확인한다 — 확인 없이 바로 args[0]에 접근하면
     // 인자가 없거나 타입이 틀릴 때 하자 에러가 아니라 JS 예외로 죽는다.
@@ -177,7 +177,8 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
 
     if (funcDecl !== null) {
       await bindParams(i, (funcDecl as ast.FunctionDeclaration).params, args, funcEnv);
-      return await execBlock(i, (funcDecl as ast.FunctionDeclaration).body.statements, funcEnv);
+      const method = funcDecl as ast.FunctionDeclaration;
+      return checkReturn(i, method, await execBlock(i, method.body.statements, funcEnv));
     } else if (ctorDecl !== null) {
       await bindParams(i, (ctorDecl as ast.ConstructorDeclaration).params, args, funcEnv);
       return await execBlock(i, (ctorDecl as ast.ConstructorDeclaration).body, funcEnv);
@@ -597,7 +598,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
             funcEnv.this_ = left;
             funcEnv.declare("__selfClass__", left.className);
             if (funcDecl.params.length > 0) funcEnv.declare(funcDecl.params[0].name.value, right);
-            const result = await execBlock(i, funcDecl.body.statements, funcEnv);
+            const result = checkReturn(i, funcDecl, await execBlock(i, funcDecl.body.statements, funcEnv));
             if (expr.operator === "!=" && typeof result === "boolean") return !result;
             return result;
           }
