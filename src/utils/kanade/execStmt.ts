@@ -192,6 +192,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
         itemName = i.config.defaultItemName;
       }
 
+      if (typeof listVal === "string") listVal = Array.from(listVal);
       if (!Array.isArray(listVal)) throw new RuntimeError(Codes.NotIterable);
       for (const item of listVal) {
         const loopEnv = new Environment(env);
@@ -279,6 +280,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           break;
         }
       }
+      if (!matched) throw new RuntimeError(Codes.NoMatch, typeof val === "string" ? `"${val}"` : i.formatValue(val));
       return;
     }
     case "FallthroughStatement":
