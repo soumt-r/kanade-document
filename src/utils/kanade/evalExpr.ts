@@ -638,7 +638,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
             if (right === 0) throw new RuntimeError(Codes.DivideByZero);
             return left / right;
           case "%":
-            if (right === 0) throw new RuntimeError(Codes.DivideByZero);
+            if (Math.trunc(right) === 0) throw new RuntimeError(Codes.DivideByZero);
             return Math.trunc(left) % Math.trunc(right);
           case ">":
             return left > right;
