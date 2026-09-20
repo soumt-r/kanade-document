@@ -939,7 +939,9 @@ export class Parser {
           this.consume(); // の
           return this.parsePrimary();
         }
-        if (this.peek(1) !== null && this.peek(1)!.type === tok.FUNCTION) {
+        // Only when the TYPE_IN word is the member particle (Kanade's "の"): Haja spells a static call
+        // "[상자]의 <만들기>()", and "인" always marks a type, so "[상자]인 <만들기>()" is a call with a type.
+        if (this.peek(1) !== null && this.peek(1)!.type === tok.FUNCTION && this.peek()!.literal === this.lang.memberParticle) {
           this.consume(); // の
           const prop = this.parsePrimary();
           return { type: "MemberExpression", object: typeRef, property: prop };
