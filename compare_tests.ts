@@ -12,7 +12,7 @@ const DOCS_DIR = './src/pages/docs';
 
 // 난수와 현재 시각을 쓰는 예제는 실행마다 결과가 달라서, 에러 없이 끝나는지만 본다.
 // [파일] 같은 NativeOnly 모듈을 쓰는 예제는 브라우저 엔진이 전용 에러로 거절하는 게 맞다.
-const NATIVE_ONLY = /【ファイル】/;
+const NATIVE_ONLY = /【ファイル】|【ソケット】|【HTTP】/;
 
 const NONDETERMINISTIC = /【乱数】|〈今〉/;
 const GO_EXECUTABLE = '..\\hana\\hana.exe';
@@ -22,7 +22,7 @@ function extractKanadeBlocks(markdown: string): string[] {
     const regex = /```kanade([^\n]*)\n([\s\S]*?)```/g;
     let match;
     while ((match = regex.exec(markdown)) !== null) {
-        blocks.push(match[2]);
+        if (!match[1].includes('skip')) blocks.push(match[2]); // `skip`: an example that needs a peer, only shown
     }
     return blocks;
 }
@@ -62,7 +62,7 @@ function runGoEngine(code: string, stdin = ''): string {
     writeFileSync(tempFile, code);
 
     try {
-        const result = execSync(`${GO_EXECUTABLE} run ${tempFile}`, { input: stdin, stdio: ['pipe', 'pipe', 'pipe'] });
+        const result = execSync(`${GO_EXECUTABLE} run ${tempFile}`, { input: stdin, stdio: ['pipe', 'pipe', 'pipe'], timeout: 60000 });
         unlinkSync(tempFile);
         return result.toString().trim();
     } catch (e: any) {
@@ -88,6 +88,8 @@ async function walk(dir: string, callback: (path: string) => Promise<void>) {
 
 const BROWSER_ONLY_CASES: { name: string; code: string; wantError: string }[] = [
     { name: "파일 모듈은 브라우저에서 못 씀", code: "【ファイル】から〈読む〉を持ってこよう\n〈読む〉(「a.txt」)を出力しよう", wantError: "ブラウザでは使えません" },
+    { name: "표준: 소켓은 브라우저에서 쓸 수 없어요", code: "【ソケット】から〈接続〉を持ってこよう\n〈接続〉(「127.0.0.1」, 80)を出力しよう\n", wantError: "ブラウザでは使えません" },
+    { name: "표준: HTTP는 브라우저에서 쓸 수 없어요", code: "【HTTP】から〈取得〉を持ってこよう\n〈取得〉(「http://127.0.0.1/」)を出力しよう\n", wantError: "ブラウザでは使えません" },
 ];
 
 // 문서 예제에는 없지만 두 엔진이 같아야 하는 동작: 표준 라이브러리(std) 임포트.

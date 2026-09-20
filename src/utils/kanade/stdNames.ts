@@ -143,6 +143,32 @@ export const stdModules: readonly StdModule[] = [
     ],
   },
   {
+    id: "socket",
+    name: "ソケット",
+    nativeOnly: true,
+    functions: [
+      { id: "socket.connect", name: "接続" },
+      { id: "socket.listen", name: "待ち受け" },
+      { id: "socket.accept", name: "受け入れ" },
+      { id: "socket.send", name: "送信" },
+      { id: "socket.receive", name: "受信" },
+      { id: "socket.receiveline", name: "行受信" },
+      { id: "socket.timeout", name: "タイムアウト" },
+      { id: "socket.address", name: "アドレス" },
+      { id: "socket.close", name: "閉じる" },
+    ],
+  },
+  {
+    id: "http",
+    name: "HTTP",
+    nativeOnly: true,
+    functions: [
+      { id: "http.get", name: "取得" },
+      { id: "http.post", name: "送信" },
+      { id: "http.request", name: "リクエスト" },
+    ],
+  },
+  {
     id: "path",
     name: "パス",
     functions: [
