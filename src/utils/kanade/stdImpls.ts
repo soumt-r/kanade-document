@@ -888,6 +888,93 @@ function pathParts(p: string): unknown[] {
   return parts;
 }
 
+// Functions that take a function of the program (변환하기, 걸러내기, …), mirroring
+// stdimpl/hostfuncs.go. The engine supplies `call`, which runs the function value
+// it is handed.
+export type Caller = (fn: unknown, args: unknown[]) => Promise<unknown>;
+export type HostImpl = (call: Caller, ...args: unknown[]) => Promise<unknown>;
+
+function callArgs(args: unknown[], n: number): [unknown[], unknown] {
+  exactly(args, n);
+  return [listArg(args, 0), args[1]];
+}
+
+async function condition(call: Caller, fn: unknown, item: unknown): Promise<boolean> {
+  const v = await call(fn, [item]);
+  if (typeof v !== "boolean") throw new RuntimeError(Codes.CallbackNotBoolean);
+  return v;
+}
+
+async function listMap(call: Caller, ...args: unknown[]): Promise<unknown> {
+  const [list, fn] = callArgs(args, 2);
+  const out: unknown[] = [];
+  for (const item of list) out.push(await call(fn, [item]));
+  return out;
+}
+
+async function listFilter(call: Caller, ...args: unknown[]): Promise<unknown> {
+  const [list, fn] = callArgs(args, 2);
+  const out: unknown[] = [];
+  for (const item of list) if (await condition(call, fn, item)) out.push(item);
+  return out;
+}
+
+async function listReduce(call: Caller, ...args: unknown[]): Promise<unknown> {
+  const [list, fn] = callArgs(args, 3);
+  let acc = args[2];
+  for (const item of list) acc = await call(fn, [acc, item]);
+  return acc;
+}
+
+async function listFind(call: Caller, ...args: unknown[]): Promise<unknown> {
+  const [list, fn] = callArgs(args, 2);
+  for (const item of list) if (await condition(call, fn, item)) return item;
+  return null;
+}
+
+async function listAny(call: Caller, ...args: unknown[]): Promise<unknown> {
+  const [list, fn] = callArgs(args, 2);
+  for (const item of list) if (await condition(call, fn, item)) return true;
+  return false;
+}
+
+async function listAll(call: Caller, ...args: unknown[]): Promise<unknown> {
+  const [list, fn] = callArgs(args, 2);
+  for (const item of list) if (!(await condition(call, fn, item))) return false;
+  return true;
+}
+
+async function listSortBy(call: Caller, ...args: unknown[]): Promise<unknown> {
+  const [list, fn] = callArgs(args, 2);
+  const keys: unknown[] = [];
+  for (const item of list) keys.push(await call(fn, [item]));
+  let less: (a: unknown, b: unknown) => number = () => 0;
+  if (keys.length > 0) {
+    if (typeof keys[0] === "number") {
+      if (keys.some((k) => typeof k !== "number")) throw new RuntimeError(Codes.ListNotSortable);
+      less = (a, b) => ((a as number) < (b as number) ? -1 : (a as number) > (b as number) ? 1 : 0);
+    } else if (typeof keys[0] === "string") {
+      if (keys.some((k) => typeof k !== "string")) throw new RuntimeError(Codes.ListNotSortable);
+      less = (a, b) => compareBytes(a as string, b as string);
+    } else {
+      throw new RuntimeError(Codes.ListNotSortable);
+    }
+  }
+  const order = list.map((_, at) => at);
+  order.sort((x, y) => less(keys[x], keys[y]));
+  return order.map((at) => list[at]);
+}
+
+export const hostImpls: Record<string, HostImpl> = {
+  "list.map": listMap,
+  "list.filter": listFilter,
+  "list.reduce": listReduce,
+  "list.find": listFind,
+  "list.any": listAny,
+  "list.all": listAll,
+  "list.sortby": listSortBy,
+};
+
 export const nativeImpls: Record<string, Impl> = {
   "math.ceil": numberFunc(Math.ceil),
   "math.floor": numberFunc(Math.floor),

@@ -11,7 +11,9 @@ import { BuiltinFunction, type NativeModule } from "./object";
 import type { KanadeInterpreter } from "./interpreter";
 import { RuntimeError, Codes } from "./errs";
 import { stdModules } from "./stdNames";
-import { nativeImpls } from "./stdImpls";
+import { nativeImpls, hostImpls } from "./stdImpls";
+import { callValue } from "./evalExpr";
+import type { Environment } from "./env";
 
 export function registerStandardLibrary(i: KanadeInterpreter): void {
   const cfg = i.config;
@@ -58,6 +60,11 @@ export function registerStandardLibrary(i: KanadeInterpreter): void {
     }
     const module: NativeModule = {};
     for (const f of m.functions) {
+      const host = hostImpls[f.id];
+      if (host) {
+        module[f.name] = new BuiltinFunction(f.name, (env, ...args) => host((fn, callArgs) => callValue(i, env as Environment, fn, callArgs), ...args));
+        continue;
+      }
       const impl = nativeImpls[f.id];
       if (!impl) throw new Error(`stdlib: no implementation for native function ${f.id}`);
       module[f.name] = new BuiltinFunction(f.name, (_env, ...args) => impl(...args));

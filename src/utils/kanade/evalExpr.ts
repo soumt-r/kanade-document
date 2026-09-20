@@ -48,6 +48,145 @@ function unescapeString(val: string): string {
   return val.replaceAll("\\n", "\n").replaceAll('\\"', '"').replaceAll("\\t", "\t").replaceAll("\\\\", "\\");
 }
 
+/** Runs a function value — a name from `<이름>`, a declared function, a builtin, or a bound method —
+ *  with already-evaluated arguments. The standard library calls the functions it is given through this. */
+export async function callValue(i: Interpreter, env: Environment, callee: unknown, args: unknown[]): Promise<unknown> {
+  if (typeof callee === "string") {
+    const funcName = callee;
+    const [fnVal] = env.get(funcName);
+    if (fnVal instanceof BuiltinFunction) {
+      return await fnVal.fn(env, ...args);
+    }
+
+    let funcDecl: ast.FunctionDeclaration | null = null;
+    if (fnVal && (fnVal as ast.FunctionDeclaration).type === "FunctionDeclaration") {
+      funcDecl = fnVal as ast.FunctionDeclaration;
+    }
+    if (funcDecl === null) {
+      for (const stmt of i.ast.statements) {
+        if (stmt.type === "FunctionDeclaration" && stmt.name.value === funcName) {
+          funcDecl = stmt;
+          break;
+        }
+      }
+    }
+    if (funcDecl === null) throw new RuntimeError(Codes.GlobalFunctionNotFound, funcName);
+    const funcEnv = new Environment(i.globalEnv);
+    await bindParams(i, funcDecl.params, args, funcEnv);
+    return await execBlock(i, funcDecl.body.statements, funcEnv);
+  }
+
+  if (callee instanceof BuiltinFunction) {
+    return await callee.fn(env, ...args);
+  }
+
+  if (callee && (callee as ast.FunctionDeclaration).type === "FunctionDeclaration") {
+    const fnDecl = callee as ast.FunctionDeclaration;
+    const callEnv = new Environment(i.globalEnv);
+    await bindParams(i, fnDecl.params, args, callEnv);
+    return await execBlock(i, fnDecl.body.statements, callEnv);
+  }
+
+  if (callee instanceof BoundStaticMethod) {
+    const cls = i.classes[callee.className];
+    let funcDecl: ast.FunctionDeclaration | null = null;
+    for (const stmt of cls.body) {
+      if (stmt.type === "FunctionDeclaration" && stmt.isStatic && stmt.name.value === callee.funcName) {
+        funcDecl = stmt;
+        break;
+      }
+    }
+    if (funcDecl === null) throw new RuntimeError(Codes.StaticMethodNotFound, callee.funcName);
+    const funcEnv = new Environment(i.globalEnv);
+    funcEnv.declare("__selfClass__", callee.className);
+    await bindParams(i, funcDecl.params, args, funcEnv);
+    return await execBlock(i, funcDecl.body.statements, funcEnv);
+  } else if (callee instanceof BoundStringMethod) {
+    // 인자 개수/타입을 먼저 확인한다 — 확인 없이 바로 args[0]에 접근하면
+    // 인자가 없거나 타입이 틀릴 때 하자 에러가 아니라 JS 예외로 죽는다.
+    if (callee.funcName === i.config.stringSliceMethod) {
+      if (args.length !== 2) throw new RuntimeError(Codes.ArgCountExact, 2);
+      const [startNum, endNum] = args;
+      if (typeof startNum !== "number" || typeof endNum !== "number") {
+        throw new RuntimeError(Codes.MethodArgMustBeNumber, callee.funcName);
+      }
+      const chars = Array.from(callee.value);
+      let start = startNum - 1;
+      let end = endNum;
+      if (start < 0) start = 0;
+      if (end > chars.length) end = chars.length;
+      if (start > end) start = end;
+      return chars.slice(start, end).join("");
+    } else if (callee.funcName === i.config.stringReplaceMethod) {
+      if (args.length !== 2) throw new RuntimeError(Codes.ArgCountExact, 2);
+      const [oldStr, newStr] = args;
+      if (typeof oldStr !== "string" || typeof newStr !== "string") {
+        throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
+      }
+      return callee.value.split(oldStr).join(newStr);
+    } else if (callee.funcName === i.config.stringSplitMethod) {
+      if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
+      const sep = args[0];
+      if (typeof sep !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
+      return callee.value.split(sep);
+    } else if (callee.funcName === i.config.stringContainsMethod) {
+      if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
+      const sub = args[0];
+      if (typeof sub !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
+      return callee.value.includes(sub);
+    }
+    throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
+  } else if (callee instanceof BoundListMethod) {
+    // 목록은 "언어 네이티브 구문"(추가하자/꺼내자 등)으로 조작하는 게 기본
+    // 설계라, 메서드 형태로 남은 건 비우기 하나뿐.
+    if (callee.funcName === i.config.listClearMethod) {
+      if (args.length !== 0) throw new RuntimeError(Codes.ArgCountExact, 0);
+      if (callee.target !== null) await assignListBack(i, callee.target, [], env);
+      return null;
+    }
+    throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
+  } else if (callee instanceof BoundMethod) {
+    const cls = i.classes[callee.object.className];
+    let funcDecl: ast.FunctionDeclaration | null = null;
+    let ctorDecl: ast.ConstructorDeclaration | null = null;
+
+    // super 호출이면 부모부터 탐색을 시작해, 오버라이딩되기 전의 원본을 찾는다.
+    let startCls = cls;
+    if (callee.isSuper && startCls && startCls.baseClass) {
+      startCls = i.classes[startCls.baseClass.name];
+    }
+    findInClassChain(i, startCls, (body) => {
+      for (const stmt of body) {
+        if (stmt.type === "FunctionDeclaration" && stmt.name.value === callee.funcName) {
+          funcDecl = stmt;
+          return true;
+        } else if (stmt.type === "ConstructorDeclaration" && callee.funcName === "__init__") {
+          ctorDecl = stmt;
+          return true;
+        }
+      }
+      return false;
+    });
+    if (funcDecl === null && ctorDecl === null) {
+      throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
+    }
+    const funcEnv = new Environment(i.globalEnv);
+    funcEnv.this_ = callee.object;
+    funcEnv.declare("this", callee.object);
+    funcEnv.declare("__selfClass__", callee.object.className);
+
+    if (funcDecl !== null) {
+      await bindParams(i, (funcDecl as ast.FunctionDeclaration).params, args, funcEnv);
+      return await execBlock(i, (funcDecl as ast.FunctionDeclaration).body.statements, funcEnv);
+    } else if (ctorDecl !== null) {
+      await bindParams(i, (ctorDecl as ast.ConstructorDeclaration).params, args, funcEnv);
+      return await execBlock(i, (ctorDecl as ast.ConstructorDeclaration).body, funcEnv);
+    }
+    return null;
+  }
+  throw new RuntimeError(Codes.NotCallable);
+}
+
 export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | null, env: Environment): Promise<unknown> {
   if (expr === null) return null;
 
@@ -243,140 +382,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
       const args: unknown[] = [];
       for (const argExpr of expr.arguments) args.push(await evaluateNode(i, argExpr, env));
 
-      if (typeof callee === "string") {
-        const funcName = callee;
-        const [fnVal] = env.get(funcName);
-        if (fnVal instanceof BuiltinFunction) {
-          return await fnVal.fn(env, ...args);
-        }
-
-        let funcDecl: ast.FunctionDeclaration | null = null;
-        if (fnVal && (fnVal as ast.FunctionDeclaration).type === "FunctionDeclaration") {
-          funcDecl = fnVal as ast.FunctionDeclaration;
-        }
-        if (funcDecl === null) {
-          for (const stmt of i.ast.statements) {
-            if (stmt.type === "FunctionDeclaration" && stmt.name.value === funcName) {
-              funcDecl = stmt;
-              break;
-            }
-          }
-        }
-        if (funcDecl === null) throw new RuntimeError(Codes.GlobalFunctionNotFound, funcName);
-        const funcEnv = new Environment(i.globalEnv);
-        await bindParams(i, funcDecl.params, args, funcEnv);
-        return await execBlock(i, funcDecl.body.statements, funcEnv);
-      }
-
-      if (callee instanceof BuiltinFunction) {
-        return await callee.fn(env, ...args);
-      }
-
-      if (callee && (callee as ast.FunctionDeclaration).type === "FunctionDeclaration") {
-        const fnDecl = callee as ast.FunctionDeclaration;
-        const callEnv = new Environment(i.globalEnv);
-        await bindParams(i, fnDecl.params, args, callEnv);
-        return await execBlock(i, fnDecl.body.statements, callEnv);
-      }
-
-      if (callee instanceof BoundStaticMethod) {
-        const cls = i.classes[callee.className];
-        let funcDecl: ast.FunctionDeclaration | null = null;
-        for (const stmt of cls.body) {
-          if (stmt.type === "FunctionDeclaration" && stmt.isStatic && stmt.name.value === callee.funcName) {
-            funcDecl = stmt;
-            break;
-          }
-        }
-        if (funcDecl === null) throw new RuntimeError(Codes.StaticMethodNotFound, callee.funcName);
-        const funcEnv = new Environment(i.globalEnv);
-        funcEnv.declare("__selfClass__", callee.className);
-        await bindParams(i, funcDecl.params, args, funcEnv);
-        return await execBlock(i, funcDecl.body.statements, funcEnv);
-      } else if (callee instanceof BoundStringMethod) {
-        // 인자 개수/타입을 먼저 확인한다 — 확인 없이 바로 args[0]에 접근하면
-        // 인자가 없거나 타입이 틀릴 때 하자 에러가 아니라 JS 예외로 죽는다.
-        if (callee.funcName === i.config.stringSliceMethod) {
-          if (args.length !== 2) throw new RuntimeError(Codes.ArgCountExact, 2);
-          const [startNum, endNum] = args;
-          if (typeof startNum !== "number" || typeof endNum !== "number") {
-            throw new RuntimeError(Codes.MethodArgMustBeNumber, callee.funcName);
-          }
-          const chars = Array.from(callee.value);
-          let start = startNum - 1;
-          let end = endNum;
-          if (start < 0) start = 0;
-          if (end > chars.length) end = chars.length;
-          if (start > end) start = end;
-          return chars.slice(start, end).join("");
-        } else if (callee.funcName === i.config.stringReplaceMethod) {
-          if (args.length !== 2) throw new RuntimeError(Codes.ArgCountExact, 2);
-          const [oldStr, newStr] = args;
-          if (typeof oldStr !== "string" || typeof newStr !== "string") {
-            throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
-          }
-          return callee.value.split(oldStr).join(newStr);
-        } else if (callee.funcName === i.config.stringSplitMethod) {
-          if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
-          const sep = args[0];
-          if (typeof sep !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
-          return callee.value.split(sep);
-        } else if (callee.funcName === i.config.stringContainsMethod) {
-          if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
-          const sub = args[0];
-          if (typeof sub !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
-          return callee.value.includes(sub);
-        }
-        throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
-      } else if (callee instanceof BoundListMethod) {
-        // 목록은 "언어 네이티브 구문"(추가하자/꺼내자 등)으로 조작하는 게 기본
-        // 설계라, 메서드 형태로 남은 건 비우기 하나뿐.
-        if (callee.funcName === i.config.listClearMethod) {
-          if (args.length !== 0) throw new RuntimeError(Codes.ArgCountExact, 0);
-          if (callee.target !== null) await assignListBack(i, callee.target, [], env);
-          return null;
-        }
-        throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
-      } else if (callee instanceof BoundMethod) {
-        const cls = i.classes[callee.object.className];
-        let funcDecl: ast.FunctionDeclaration | null = null;
-        let ctorDecl: ast.ConstructorDeclaration | null = null;
-
-        // super 호출이면 부모부터 탐색을 시작해, 오버라이딩되기 전의 원본을 찾는다.
-        let startCls = cls;
-        if (callee.isSuper && startCls && startCls.baseClass) {
-          startCls = i.classes[startCls.baseClass.name];
-        }
-        findInClassChain(i, startCls, (body) => {
-          for (const stmt of body) {
-            if (stmt.type === "FunctionDeclaration" && stmt.name.value === callee.funcName) {
-              funcDecl = stmt;
-              return true;
-            } else if (stmt.type === "ConstructorDeclaration" && callee.funcName === "__init__") {
-              ctorDecl = stmt;
-              return true;
-            }
-          }
-          return false;
-        });
-        if (funcDecl === null && ctorDecl === null) {
-          throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
-        }
-        const funcEnv = new Environment(i.globalEnv);
-        funcEnv.this_ = callee.object;
-        funcEnv.declare("this", callee.object);
-        funcEnv.declare("__selfClass__", callee.object.className);
-
-        if (funcDecl !== null) {
-          await bindParams(i, (funcDecl as ast.FunctionDeclaration).params, args, funcEnv);
-          return await execBlock(i, (funcDecl as ast.FunctionDeclaration).body.statements, funcEnv);
-        } else if (ctorDecl !== null) {
-          await bindParams(i, (ctorDecl as ast.ConstructorDeclaration).params, args, funcEnv);
-          return await execBlock(i, (ctorDecl as ast.ConstructorDeclaration).body, funcEnv);
-        }
-        return null;
-      }
-      throw new RuntimeError(Codes.NotCallable);
+      return await callValue(i, env, callee, args);
     }
     case "ListLiteral": {
       const elements: unknown[] = [];
