@@ -28,7 +28,7 @@ const SPECS: Spec[] = [
   { kind: tok.FUNCTION, regex: /^〈[^〉]+〉/ },
   // TYPE: 【(genericArgs)Name】 — generic arg list keeps ASCII parens
   // (kanade-docs: 【(文字列)リスト】, 【(文字列,数字)辞書】).
-  { kind: tok.TYPE, regex: new RegExp("^【(?:\\([^)]+\\))?" + JA_WORD + "】") },
+  { kind: tok.TYPE, regex: new RegExp("^【(?:\\([^)]+\\))?(?:" + JA_WORD + "|[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:/[A-Za-z0-9][A-Za-z0-9._-]*){2,})】") },
   // List/type brackets share 【】 in kanade-docs — TYPE above only matches
   // when the contents look like a type name, so a list literal like
   // 【「りんご」,「バナナ」】 falls through to bare LBRACKET here.
