@@ -19,7 +19,7 @@ import { evaluateNode, execBlock } from "./evalExpr";
 import { popFromList, assignListBack } from "./listOps";
 import { findInClassChain, thrownValueMatchesType } from "./classLookup";
 import { HajaObject, ClassReference } from "./object";
-import { assignVariable, checkDeclaredType, checkField } from "./types";
+import { assignVariable, checkDeclaredType, checkField, requireBool } from "./types";
 import { ReturnSignal, BreakSignal, ThrownSignal } from "./errors";
 import { RuntimeError, Codes, localize } from "./errs";
 
@@ -208,7 +208,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
     case "WhileLoop": {
       for (;;) {
         const condVal = await evaluateNode(i, stmt.condition, env);
-        if (!(typeof condVal === "boolean" && condVal)) break;
+        if (!requireBool(condVal, i)) break;
 
         const loopEnv = new Environment(env);
         try {
@@ -285,7 +285,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       return;
     case "IfStatement": {
       const cond = await evaluateNode(i, stmt.condition, env);
-      if (typeof cond === "boolean" && cond) {
+      if (requireBool(cond, i)) {
         for (const bs of stmt.consequent.statements) await executeStmt(i, bs, env);
       } else if (stmt.alternate !== null) {
         for (const bs of stmt.alternate.statements) await executeStmt(i, bs, env);

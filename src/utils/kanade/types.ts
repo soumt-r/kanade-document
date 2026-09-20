@@ -6,6 +6,7 @@ import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { HajaObject } from "./object";
 import { checkType, checkArgumentType, describe, type TypeHost, type TypeNames } from "./typecheck";
+import { RuntimeError, Codes } from "./errs";
 
 class InterpreterTypeHost implements TypeHost {
   constructor(private i: KanadeInterpreter) {}
@@ -30,6 +31,12 @@ class InterpreterTypeHost implements TypeHost {
 }
 
 // describeType names a value's type in the language's words (for operator errors).
+// requireBool is a condition's value: only true and false are conditions.
+export function requireBool(v: unknown, i: KanadeInterpreter): boolean {
+  if (typeof v === "boolean") return v;
+  throw new RuntimeError(Codes.ConditionNotBoolean, describeType(i.config.types, v, i));
+}
+
 export function describeType(names: TypeNames, v: unknown, i: KanadeInterpreter): string {
   return describe(names, v, host(i));
 }

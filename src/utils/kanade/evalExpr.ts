@@ -9,7 +9,7 @@
 import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { MAX_CALL_DEPTH } from "./config";
-import { checkInitialField, describeType } from "./types";
+import { checkInitialField, describeType, requireBool } from "./types";
 import { Environment } from "./env";
 import { executeStmt } from "./execStmt";
 import { bindParams } from "./params";
@@ -562,14 +562,14 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
     }
     case "LogicalExpression": {
       const left = await evaluateNode(i, expr.left, env);
-      const leftBool = typeof left === "boolean" ? left : false;
+      const leftBool = requireBool(left, i);
       if (expr.operator === "그리고") {
         if (!leftBool) return false;
       } else if (leftBool) {
         return true;
       }
       const right = await evaluateNode(i, expr.right, env);
-      return typeof right === "boolean" ? right : false;
+      return requireBool(right, i);
     }
     case "BinaryExpression": {
       const left = await evaluateNode(i, expr.left, env);
