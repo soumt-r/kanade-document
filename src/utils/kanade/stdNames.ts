@@ -136,6 +136,21 @@ export const stdModules: readonly StdModule[] = [
     ],
   },
   {
+    id: "path",
+    name: "パス",
+    functions: [
+      { id: "path.join", name: "結合" },
+      { id: "path.dirname", name: "フォルダ名" },
+      { id: "path.basename", name: "ファイル名" },
+      { id: "path.ext", name: "拡張子" },
+      { id: "path.stem", name: "拡張子なし名" },
+      { id: "path.withext", name: "拡張子変更" },
+      { id: "path.normalize", name: "正規化" },
+      { id: "path.isabs", name: "絶対パスか" },
+      { id: "path.parts", name: "構成要素" },
+    ],
+  },
+  {
     id: "regex",
     name: "正規表現",
     functions: [

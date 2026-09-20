@@ -793,6 +793,101 @@ function randomUUID(...args: unknown[]): unknown {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
+// [경로]: text-only path helpers, mirroring stdimpl/path.go. "\" counts as "/", a
+// letter and colon at the start is a drive, results use "/".
+function splitPath(p: string): [string, string] {
+  const n = p.split("\\").join("/");
+  if (/^[A-Za-z]:/.test(n)) return [n.slice(0, 2), n.slice(2)];
+  return ["", n];
+}
+
+function pathFunc1(f: (p: string) => unknown): Impl {
+  return (...args) => {
+    exactly(args, 1);
+    return f(stringArg(args, 0));
+  };
+}
+
+const MAX_JOIN_PARTS = 100;
+
+function pathJoin(...args: unknown[]): unknown {
+  between(args, 1, MAX_JOIN_PARTS);
+  let result = "";
+  for (let i = 0; i < args.length; i++) {
+    const [drive, rest] = splitPath(stringArg(args, i));
+    const part = drive + rest;
+    if (part === "") continue;
+    if (rest.startsWith("/")) result = part;
+    else if (result === "") result = part;
+    else if (result.endsWith("/")) result += part;
+    else result += "/" + part;
+  }
+  return result;
+}
+
+function baseName(p: string): string {
+  const rest = splitPath(p)[1];
+  return rest.slice(rest.lastIndexOf("/") + 1);
+}
+
+function splitExt(name: string): [string, string] {
+  let lead = 0;
+  while (lead < name.length && name[lead] === ".") lead++;
+  const j = name.lastIndexOf(".");
+  if (j >= lead) return [name.slice(0, j), name.slice(j)];
+  return [name, ""];
+}
+
+function pathDirname(p: string): string {
+  const [drive, rest] = splitPath(p);
+  const i = rest.lastIndexOf("/");
+  if (i < 0) return drive;
+  let head = rest.slice(0, i + 1).replace(/\/+$/, "");
+  if (head === "") head = "/";
+  return drive + head;
+}
+
+function pathWithExt(...args: unknown[]): unknown {
+  exactly(args, 2);
+  const p = stringArg(args, 0);
+  let ext = stringArg(args, 1);
+  const [drive, rest] = splitPath(p);
+  const dir = rest.slice(0, rest.lastIndexOf("/") + 1);
+  const base = rest.slice(dir.length);
+  if (base === "") return drive + rest;
+  const stem = splitExt(base)[0];
+  if (ext !== "" && !ext.startsWith(".")) ext = "." + ext;
+  return drive + dir + stem + ext;
+}
+
+function pathNormalize(p: string): string {
+  const [drive, rest] = splitPath(p);
+  const absolute = rest.startsWith("/");
+  const stack: string[] = [];
+  for (const seg of rest.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") {
+      if (stack.length > 0 && stack[stack.length - 1] !== "..") stack.pop();
+      else if (!absolute) stack.push("..");
+    } else {
+      stack.push(seg);
+    }
+  }
+  let result = stack.join("/");
+  if (absolute) result = "/" + result;
+  if (result === "") return drive !== "" ? drive : ".";
+  return drive + result;
+}
+
+function pathParts(p: string): unknown[] {
+  const [drive, rest] = splitPath(p);
+  const parts: unknown[] = [];
+  if (rest.startsWith("/")) parts.push(drive + "/");
+  else if (drive !== "") parts.push(drive);
+  for (const seg of rest.split("/")) if (seg !== "" && seg !== ".") parts.push(seg);
+  return parts;
+}
+
 export const nativeImpls: Record<string, Impl> = {
   "math.ceil": numberFunc(Math.ceil),
   "math.floor": numberFunc(Math.floor),
@@ -870,6 +965,16 @@ export const nativeImpls: Record<string, Impl> = {
 
   "hash.sha256": hashSHA256,
   "random.uuid": randomUUID,
+
+  "path.join": pathJoin,
+  "path.dirname": pathFunc1(pathDirname),
+  "path.basename": pathFunc1(baseName),
+  "path.ext": pathFunc1((p) => splitExt(baseName(p))[1]),
+  "path.stem": pathFunc1((p) => splitExt(baseName(p))[0]),
+  "path.withext": pathWithExt,
+  "path.normalize": pathFunc1(pathNormalize),
+  "path.isabs": pathFunc1((p) => splitPath(p)[1].startsWith("/")),
+  "path.parts": pathFunc1(pathParts),
 
   "regex.test": regexTest,
   "regex.find": regexFind,
