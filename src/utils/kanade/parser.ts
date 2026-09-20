@@ -807,18 +807,21 @@ export class Parser {
   }
 
   parseExpression(): ast.Expression {
+    return this.parseBinary(1);
+  }
+
+  // The usual arithmetic order: * / % bind tighter than + -, and operators of one level go left to right.
+  private parseBinary(minPrec: number): ast.Expression {
     let expr = this.parseMemberAndCall();
 
     for (;;) {
       const t = this.peek();
-      if (t === null) break;
-      if (t.type === tok.OP) {
-        const op = this.consume().literal;
-        const right = this.parseMemberAndCall();
-        expr = { type: "BinaryExpression", left: expr, operator: op, right };
-      } else {
-        break;
-      }
+      if (t === null || t.type !== tok.OP) break;
+      const prec = t.literal === "*" || t.literal === "/" || t.literal === "%" ? 2 : 1;
+      if (prec < minPrec) break;
+      const op = this.consume().literal;
+      const right = this.parseBinary(prec + 1);
+      expr = { type: "BinaryExpression", left: expr, operator: op, right };
     }
     return expr;
   }
