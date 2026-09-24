@@ -9,7 +9,7 @@ import Layout from '../layouts/Layout.astro';
         <p class="font-mono text-xs tracking-[0.25em] text-ink-faint uppercase mb-2">Playground</p>
         <h1 class="text-3xl font-extrabold tracking-tight">プレイグラウンド</h1>
       </div>
-      <button id="run-btn" class="hj-run solid !text-sm !px-6 !py-2.5 flex items-center gap-2">
+      <button id="run-btn" class="hr-run solid !text-sm !px-6 !py-2.5 flex items-center gap-2">
         <span id="run-text">実行する</span>
         <svg id="run-spinner" class="hidden animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       </button>
@@ -17,14 +17,14 @@ import Layout from '../layouts/Layout.astro';
 
     <div class="flex flex-col md:flex-row gap-5 flex-grow min-h-0">
       <!-- Editor -->
-      <div class="hj-panel flex-1 min-h-0">
-        <div class="hj-panel-head"><span class="hj-tag">main.knd</span></div>
+      <div class="hr-panel flex-1 min-h-0">
+        <div class="hr-panel-head"><span class="hr-tag">main.knd</span></div>
         <div id="editor-container" class="flex-grow w-full overflow-hidden flex flex-col"></div>
       </div>
 
       <!-- Output -->
-      <div class="hj-out flex-1 flex flex-col min-h-0 overflow-hidden" style="border-radius:10px">
-        <div class="hj-out-head">結果</div>
+      <div class="hr-out flex-1 flex flex-col min-h-0 overflow-hidden" style="border-radius:10px">
+        <div class="hr-out-head">結果</div>
         <div class="flex-grow w-full p-4 overflow-y-auto relative">
           <pre id="output" class="text-[14.5px] whitespace-pre-wrap"></pre>
         </div>
@@ -86,14 +86,14 @@ import Layout from '../layouts/Layout.astro';
               if (!output) { resolve(""); return; }
               const promptSpan = document.createElement("span");
               promptSpan.innerText = promptText;
-              promptSpan.className = "hj-prompt";
+              promptSpan.className = "hr-prompt";
               
               const inputWrapper = document.createElement("span");
               inputWrapper.className = "relative inline-block ml-2";
               
               const inputEl = document.createElement("input");
               inputEl.type = "text";
-              inputEl.className = "hj-input";
+              inputEl.className = "hr-input";
               inputEl.autocomplete = "off";
               
               inputWrapper.appendChild(inputEl);

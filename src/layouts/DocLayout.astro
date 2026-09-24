@@ -84,7 +84,7 @@ const navItems = [
           </div>
         ))}
 
-        <button id="open-side-playground" class="hj-run solid w-full py-2.5">
+        <button id="open-side-playground" class="hr-run solid w-full py-2.5">
           直接実行してみる
         </button>
       </nav>
@@ -99,16 +99,16 @@ const navItems = [
 
   <!-- Side Playground Overlay -->
   <div id="side-playground-drawer" class="fixed top-0 right-0 w-0 h-full bg-white border-l border-rule z-40 transition-all duration-300 flex flex-col overflow-hidden">
-    <div class="hj-panel-head shrink-0 !py-2.5" style="border-radius:0">
-      <span class="hj-tag font-semibold text-ink">プレイグラウンド</span>
+    <div class="hr-panel-head shrink-0 !py-2.5" style="border-radius:0">
+      <span class="hr-tag font-semibold text-ink">プレイグラウンド</span>
       <div class="flex gap-2">
-        <button id="side-run-btn" class="hj-run solid">実行</button>
-        <button id="side-close-btn" class="hj-run">閉じる</button>
+        <button id="side-run-btn" class="hr-run solid">実行</button>
+        <button id="side-close-btn" class="hr-run">閉じる</button>
       </div>
     </div>
     <div id="side-editor" class="flex-grow w-full overflow-hidden flex flex-col min-h-0"></div>
-    <div class="hj-out h-[40%] flex flex-col shrink-0">
-      <div class="hj-out-head shrink-0">結果</div>
+    <div class="hr-out h-[40%] flex flex-col shrink-0">
+      <div class="hr-out-head shrink-0">結果</div>
       <pre id="side-output" class="p-4 text-[13.5px] whitespace-pre-wrap overflow-y-auto flex-grow m-0">コードを書いて「実行」ボタンを押してください。</pre>
     </div>
   </div>
@@ -127,14 +127,14 @@ const createInputCallback = (outputContainer) => (promptText) => {
     if (!outputContainer) { resolve(""); return; }
     const promptSpan = document.createElement("span");
     promptSpan.innerText = promptText;
-    promptSpan.className = "hj-prompt";
+    promptSpan.className = "hr-prompt";
     
     const inputWrapper = document.createElement("span");
     inputWrapper.className = "relative inline-block ml-2";
     
     const inputEl = document.createElement("input");
     inputEl.type = "text";
-    inputEl.className = "hj-input";
+    inputEl.className = "hr-input";
     inputEl.autocomplete = "off";
     
     inputWrapper.appendChild(inputEl);
@@ -281,18 +281,18 @@ const createInputCallback = (outputContainer) => (promptText) => {
 
         // Create container for interactive block
         const container = document.createElement('div');
-        container.className = 'not-prose hj-panel my-8';
+        container.className = 'not-prose hr-panel my-8';
 
         // Header
         const header = document.createElement('div');
-        header.className = 'hj-panel-head';
+        header.className = 'hr-panel-head';
 
         const label = document.createElement('span');
-        label.className = 'hj-tag';
+        label.className = 'hr-tag';
         label.textContent = `例題 ${index + 1}`;
 
         const runBtn = document.createElement('button');
-        runBtn.className = 'hj-run';
+        runBtn.className = 'hr-run';
         runBtn.innerHTML = `実行`;
 
         header.appendChild(label);
@@ -304,10 +304,10 @@ const createInputCallback = (outputContainer) => (promptText) => {
 
         // Output area
         const outputWrapper = document.createElement('div');
-        outputWrapper.className = 'hidden flex-col hj-out';
+        outputWrapper.className = 'hidden flex-col hr-out';
 
         const outputHeader = document.createElement('div');
-        outputHeader.className = 'hj-out-head';
+        outputHeader.className = 'hr-out-head';
         outputHeader.textContent = '結果';
 
         const outputPre = document.createElement('pre');
