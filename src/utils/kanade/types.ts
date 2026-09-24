@@ -4,7 +4,7 @@
 import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
-import { HajaObject } from "./object";
+import { HariObject } from "./object";
 import { checkType, checkArgumentType, checkReturnType, describe, type TypeHost, type TypeNames } from "./typecheck";
 import { RuntimeError, Codes } from "./errs";
 
@@ -12,7 +12,7 @@ class InterpreterTypeHost implements TypeHost {
   constructor(private i: KanadeInterpreter) {}
 
   classOf(v: unknown): string | null {
-    return v instanceof HajaObject ? v.className : null;
+    return v instanceof HariObject ? v.className : null;
   }
 
   // True when cls is target, extends it, or (at any level of the chain)
@@ -66,7 +66,7 @@ export function fieldAnnotation(i: KanadeInterpreter, className: string, prop: s
 export function declaredTypeOf(i: KanadeInterpreter, env: Environment, name: string): string | undefined {
   const owner = env.ownerOf(name);
   if (owner === null) return undefined;
-  if (owner instanceof HajaObject) return fieldAnnotation(i, owner.className, name);
+  if (owner instanceof HariObject) return fieldAnnotation(i, owner.className, name);
   return owner.declaredType(name);
 }
 
@@ -78,7 +78,7 @@ export function checkDeclaredType(i: KanadeInterpreter, env: Environment, name: 
 }
 
 // checkField enforces a class field's declared type on a write.
-export function checkField(i: KanadeInterpreter, obj: HajaObject, prop: string, val: unknown): void {
+export function checkField(i: KanadeInterpreter, obj: HariObject, prop: string, val: unknown): void {
   const annotation = fieldAnnotation(i, obj.className, prop);
   if (annotation !== undefined) checkType(i.config.types, annotation, prop, val, host(i));
 }

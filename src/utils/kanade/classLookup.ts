@@ -2,7 +2,7 @@
 import type * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { ThrownSignal } from "./errors";
-import { HajaObject } from "./object";
+import { HariObject } from "./object";
 
 // findInClassChain walks cls up its baseClass chain, calling visit(body) at
 // each level. visit returns true once it has found what it was looking for
@@ -36,12 +36,12 @@ export function classIsOrExtends(i: KanadeInterpreter, className: string, target
 }
 
 // thrownValueMatchesType checks whether a TryStatement's block threw a value
-// matching a CatchClause's declared type. Only a thrown HajaObject (an actual
+// matching a CatchClause's declared type. Only a thrown HariObject (an actual
 // class instance) has a class to match against — an engine-raised error
 // (TypeError, ...) is a plain Error, never a class instance, and is only
 // reachable through an untyped catch handler.
 export function thrownValueMatchesType(i: KanadeInterpreter, err: unknown, typeName: string): boolean {
   if (!(err instanceof ThrownSignal)) return false;
-  if (!(err.value instanceof HajaObject)) return false;
+  if (!(err.value instanceof HariObject)) return false;
   return classIsOrExtends(i, err.value.className, typeName);
 }

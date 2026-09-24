@@ -7,7 +7,7 @@
 // previous ad hoc engine to keep index.ts's public contract unchanged).
 import * as ast from "./ast";
 import { Environment } from "./env";
-import { HajaObject } from "./object";
+import { HariObject } from "./object";
 import { type LangConfig, JapaneseConfig } from "./config";
 import { evaluateNode } from "./evalExpr";
 import { executeStmt } from "./execStmt";
@@ -127,7 +127,7 @@ export class KanadeInterpreter {
   formatValue(val: unknown): string {
     if (val === null || val === undefined) return this.config.nullString;
     if (typeof val === "string") return val;
-    if (val instanceof HajaObject) return this.config.objectFormat.replace("%s", val.className);
+    if (val instanceof HariObject) return this.config.objectFormat.replace("%s", val.className);
     if (typeof val === "boolean") return val ? this.config.trueString : this.config.falseString;
     if (Array.isArray(val)) return "[" + val.map((el) => this.formatValue(el)).join(", ") + "]";
     if (val instanceof Map) {

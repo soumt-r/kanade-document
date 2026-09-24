@@ -1,5 +1,5 @@
 // Mirrors hana/lexer/kanade/lexer.go: same ordered {kind, regex}[] spec
-// table + indent stack shape as haja-docs' lexer.ts, but matched against
+// table + indent stack shape as hari-docs' lexer.ts, but matched against
 // Japanese full-width punctuation and vocabulary instead of Korean/ASCII —
 // the regexes here are lifted verbatim from the Go source, which is itself
 // already verified against every real kanade-docs code block (see

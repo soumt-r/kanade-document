@@ -1,4 +1,4 @@
-// Mirrors hana/parser/haja/parser.go method-for-method (parseStatement's
+// Mirrors hana/parser/hari/parser.go method-for-method (parseStatement's
 // lookahead dispatch, parseGenericSov's SOV verb-collection dispatch,
 // parseExpression -> parseMemberAndCall -> parsePrimary precedence chain).
 // Unlike Go's Parser (which takes an injected LangProfile so parser/kanade
@@ -12,7 +12,7 @@ import { kanadeProfile, literalIn, LoopKind, type Component, type LangProfile } 
 
 // A parse problem with its position (1-based line, 0-based column in UTF-16
 // units). The parser recovers and keeps going, so problems are collected -
-// mirrors parser/haja's Diagnostic in hana.
+// mirrors parser/hari's Diagnostic in hana.
 export interface ParseDiagnostic {
   line: number;
   col: number;
@@ -31,7 +31,7 @@ export class Parser {
   private pos = 0;
   private diags: ParseDiagnostic[] = [];
   // The `[타입]인 값` annotation parsePrimary just consumed; the SOV loop moves it
-  // onto the component so a declaration can keep it (mirrors parser/haja).
+  // onto the component so a declaration can keep it (mirrors parser/hari).
   private declaredType: ast.TypeReference | null = null;
   private lang: LangProfile = kanadeProfile;
 
@@ -939,7 +939,7 @@ export class Parser {
           this.consume(); // の
           return this.parsePrimary();
         }
-        // Only when the TYPE_IN word is the member particle (Kanade's "の"): Haja spells a static call
+        // Only when the TYPE_IN word is the member particle (Kanade's "の"): Hari spells a static call
         // "[상자]의 <만들기>()", and "인" always marks a type, so "[상자]인 <만들기>()" is a call with a type.
         if (this.peek(1) !== null && this.peek(1)!.type === tok.FUNCTION && this.peek()!.literal === this.lang.memberParticle) {
           this.consume(); // の

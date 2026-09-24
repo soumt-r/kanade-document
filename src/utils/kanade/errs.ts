@@ -6,7 +6,7 @@
 // source of truth into errCatalog.ts (`go run ./cmd/errsgen` in hana/), so both
 // engines print identical text and nobody re-types a message.
 //
-// This file is identical in haja-docs and kanade-docs.
+// This file is identical in hari-docs and kanade-docs.
 import { Codes, catalogs, type Code } from "./errCatalog";
 
 export { Codes };
@@ -64,7 +64,7 @@ export function localize(loc: Locale, err: unknown): string {
 
 // syntaxError is the typed, localizable error for a parser diagnostic: an
 // unknown token, or (empty literal) running off the end of the input. Mirrors
-// parser/haja's Diagnostic.Err in hana.
+// parser/hari's Diagnostic.Err in hana.
 export function syntaxError(d: { line: number; col: number; literal: string }): RuntimeError {
   if (d.literal === "") return new RuntimeError(Codes.UnexpectedEnd, d.line);
   return new RuntimeError(Codes.UnexpectedToken, d.line, d.col + 1, d.literal);

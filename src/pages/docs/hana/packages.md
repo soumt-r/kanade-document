@@ -89,8 +89,8 @@ hana add github.com/owner/repo
 ```bash
 repo/
 ├── hana.pkg.json
-├── haja/
-│   └── index.hj      ← ハジャのエントリポイント
+├── hari/
+│   └── index.hr      ← ハジャのエントリポイント
 └── kanade/
     └── index.knd     ← カナデのエントリポイント
 ```

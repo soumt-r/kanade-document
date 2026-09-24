@@ -1,6 +1,6 @@
 // Mirrors hana/parser/kanade/parser.go's kanadeProfile (which is itself just
-// a *haja.LangProfile instance handed to the shared Go parser). This repo's
-// parser.ts hardwires this directly instead — see haja-docs' langProfile.ts
+// a *hari.LangProfile instance handed to the shared Go parser). This repo's
+// parser.ts hardwires this directly instead — see hari-docs' langProfile.ts
 // header comment for why ("구조만 미러링", no cross-repo shared package).
 import type { Token } from "./token";
 

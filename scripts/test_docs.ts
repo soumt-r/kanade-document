@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { runHaja } from '../src/utils/kanade/index.js';
+import { runHari } from '../src/utils/kanade/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,7 +24,7 @@ async function checkCodeBlock(code: string, filePath: string, expectError: boole
     // Discard output so it doesn't clutter the console
     const discardOutput = (msg: string) => {};
 
-    await runHaja(code, dummyInput, discardOutput);
+    await runHari(code, dummyInput, discardOutput);
     if (expectError) {
        errorCount++;
        console.error('\\n❌ [예상된 에러 누락] 파일: ' + path.relative(process.cwd(), filePath));

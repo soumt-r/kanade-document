@@ -7,7 +7,7 @@ import { JapaneseConfig } from "./config";
 import { localize, syntaxError } from "./errs";
 
 // runKanade — renamed from the previous ad hoc engine's copy-pasted
-// `runHaja` (a leftover from forking haja-docs' engine that was never
+// `runHari` (a leftover from forking hari-docs' engine that was never
 // actually renamed; playground.astro's import/call site is updated to match).
 export async function runKanade(
   code: string,

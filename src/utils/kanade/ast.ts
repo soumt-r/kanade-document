@@ -8,7 +8,7 @@
 //
 // One deliberate structural change from a byte-for-byte port: Go's
 // IfStatement has no `elifs` field — an "else if" is just another IfStatement
-// nested inside Alternate (see parser/haja/parser.go's parseIfBody). The
+// nested inside Alternate (see parser/hari/parser.go's parseIfBody). The
 // previous ad hoc TS engine flattened elif chains into an `elifs: []` array
 // instead; this port follows Go's nested-Alternate shape so the interpreter
 // only needs one IfStatement-evaluation path, not two.

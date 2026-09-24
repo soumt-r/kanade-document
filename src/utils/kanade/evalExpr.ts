@@ -16,7 +16,7 @@ import { bindParams } from "./params";
 import { popFromList, requireMutable } from "./listOps";
 import { findInClassChain, classIsOrExtends } from "./classLookup";
 import {
-  HajaObject,
+  HariObject,
   BoundMethod,
   BuiltinFunction,
   BoundStringMethod,
@@ -304,7 +304,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         const objName = name.slice(0, dotIdx);
         const methodName = name.slice(dotIdx + 1);
         const [val, ok] = env.get(objName);
-        if (ok && val instanceof HajaObject) {
+        if (ok && val instanceof HariObject) {
           return new BoundMethod(val, methodName);
         }
       }
@@ -332,7 +332,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         throw new RuntimeError(Codes.ClassNotFound, clsName);
       }
       if (cls.isAbstract) throw new RuntimeError(Codes.AbstractClass, clsName);
-      const obj = new HajaObject(clsName);
+      const obj = new HariObject(clsName);
 
       for (const stmt of cls.body) {
         if (stmt.type === "VariableDeclaration" && !stmt.isStatic) {
@@ -424,7 +424,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         }
         return new BoundMethod(obj.object, property.name, true);
       }
-      if (obj instanceof HajaObject) {
+      if (obj instanceof HariObject) {
         let propName = "";
         let isFunc = false;
         if (property.type === "FunctionReference") {
@@ -577,14 +577,14 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
       const right = await evaluateNode(i, expr.right, env);
 
       if (expr.operator === "instanceof") {
-        if (left instanceof HajaObject && right instanceof ClassReference) {
+        if (left instanceof HariObject && right instanceof ClassReference) {
           return classIsOrExtends(i, left.className, right.className);
         }
         return false;
       }
 
       if (expr.operator === "==" || expr.operator === "!=") {
-        if (left instanceof HajaObject) {
+        if (left instanceof HariObject) {
           const cls = i.classes[left.className];
           let funcDecl: ast.FunctionDeclaration | null = null;
           for (const stmt of cls.body) {

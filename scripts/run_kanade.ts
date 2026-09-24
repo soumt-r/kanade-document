@@ -1,4 +1,4 @@
-import { runHaja } from '../src/utils/kanade/index.ts';
+import { runHari } from '../src/utils/kanade/index.ts';
 
 const code = `
 【座標】を設計しよう:
@@ -26,7 +26,7 @@ const code = `
 async function main() {
     console.log("--- 実行開始 ---");
     let output = "";
-    await runHaja(code, async () => "", (msg) => {
+    await runHari(code, async () => "", (msg) => {
         process.stdout.write(msg);
         output += msg;
     });

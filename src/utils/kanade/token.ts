@@ -84,11 +84,11 @@ export const KW_OR = "KW_OR"; // 또는
 // equivalent — it chains else-if by writing KW_ELSE immediately followed by a
 // separate KW_IF token ("그렇지 않고 만약"). Kept here even though this repo's
 // lexer never emits it, purely so parser.ts's elif-handling branch (mirroring
-// parser/haja/parser.go's parseIfBody) type-checks identically to the Go
+// parser/hari/parser.go's parseIfBody) type-checks identically to the Go
 // source it's ported from.
 export const KW_ELIF = "KW_ELIF";
 
-// Ad hoc token kinds Go's lexer/haja/lexer.go creates as bare string literals
+// Ad hoc token kinds Go's lexer/hari/lexer.go creates as bare string literals
 // rather than token.* constants — centralized here as real constants since a
 // TS lexer/parser pair benefits more from that than the Go one did.
 export const INDENT = "INDENT";

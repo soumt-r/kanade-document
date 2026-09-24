@@ -1,8 +1,8 @@
 // CodeMirror 6 language-service glue for the Playground editor: autocomplete
 // + a linter that re-runs the real Lexer/Parser on every doc change purely
 // to catch thrown errors and turn them into Diagnostics. Renamed from the
-// previous ad hoc engine's `hajaLSP.ts` (a copy-paste leftover filename from
-// forking haja-docs — playground.astro's import path is updated to match).
+// previous ad hoc engine's `hariLSP.ts` (a copy-paste leftover filename from
+// forking hari-docs — playground.astro's import path is updated to match).
 import { autocompletion } from "@codemirror/autocomplete";
 import type { CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { linter } from "@codemirror/lint";

@@ -1,9 +1,9 @@
 // Mirrors hana/typecheck (Go): the dynamic type checker of Runtime spec 2.2.
 // Does a runtime value satisfy a declared type such as [숫자], [(숫자)목록] or
 // [자동차]? Values are the engine's own: number, string, boolean, null, Array
-// (list), Map (dictionary) and HajaObject (a class instance, via the host).
+// (list), Map (dictionary) and HariObject (a class instance, via the host).
 //
-// This file is identical in haja-docs and kanade-docs.
+// This file is identical in hari-docs and kanade-docs.
 import { RuntimeError, Codes } from "./errs";
 
 // A language's names for the built-in types (하자: 숫자, 문자열, 논리, 아무거나,

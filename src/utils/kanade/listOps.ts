@@ -7,7 +7,7 @@ import type * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
 import { evaluateNode } from "./evalExpr";
-import { HajaObject } from "./object";
+import { HariObject } from "./object";
 import { RuntimeError, Codes } from "./errs";
 import { checkDeclaredType, checkField } from "./types";
 
@@ -26,7 +26,7 @@ export async function checkListPush(i: KanadeInterpreter, target: ast.Expression
   }
   if (target.type === "MemberExpression") {
     const obj = await evaluateNode(i, target.object, env);
-    if (obj instanceof HajaObject && target.property.type === "Identifier") {
+    if (obj instanceof HariObject && target.property.type === "Identifier") {
       checkField(i, obj, target.property.value, list);
     }
   }

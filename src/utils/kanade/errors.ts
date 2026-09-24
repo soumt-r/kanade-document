@@ -1,11 +1,11 @@
 // Mirrors hana/vm/interpreter.go's control-flow signal types and adds the
 // TS-only syntax/runtime error split index.ts's public contract needs (see
-// haja-docs' errors.ts for the full rationale — identical here).
+// hari-docs' errors.ts for the full rationale — identical here).
 //
 // KanadeError's message format ("N行目、N文字目: ...") is deliberately fixed:
 // the previous ad hoc engine threw "N번째 줄" (Korean "line N") from a
 // Japanese-language site's own error path — a copy-paste leftover from the
-// Haja engine that never got translated — while hajaLSP.ts's linter regex
+// Hari engine that never got translated — while hariLSP.ts's linter regex
 // expected "N行目" and so never actually matched it. Both now agree on one
 // Japanese format.
 
@@ -34,13 +34,13 @@ export class KanadeSyntaxReport extends Error {
 
 export class KanadeRuntimeError extends Error {
   line: number | string;
-  hajaObj?: unknown;
+  hariObj?: unknown;
 
-  constructor(message: string, line: number | string = "?", hajaObj?: unknown) {
+  constructor(message: string, line: number | string = "?", hariObj?: unknown) {
     super(message);
     this.name = "KanadeRuntimeError";
     this.line = line;
-    this.hajaObj = hajaObj;
+    this.hariObj = hariObj;
   }
 }
 

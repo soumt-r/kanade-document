@@ -18,7 +18,7 @@ import { Environment } from "./env";
 import { evaluateNode, execBlock } from "./evalExpr";
 import { popFromList, pushOnto, takeBack, checkListPush, requireMutable } from "./listOps";
 import { findInClassChain, thrownValueMatchesType } from "./classLookup";
-import { HajaObject, ClassReference } from "./object";
+import { HariObject, ClassReference } from "./object";
 import { assignVariable, checkDeclaredType, checkField, requireBool } from "./types";
 import { ReturnSignal, BreakSignal, ThrownSignal } from "./errors";
 import { RuntimeError, Codes, localize } from "./errs";
@@ -47,11 +47,11 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           }
           if (matchedHandler !== null) {
             const catchEnv = new Environment(env);
-            let errObj: HajaObject;
-            if (e instanceof ThrownSignal && e.value instanceof HajaObject) {
+            let errObj: HariObject;
+            if (e instanceof ThrownSignal && e.value instanceof HariObject) {
               errObj = e.value;
             } else {
-              errObj = new HajaObject(i.config.builtinErrorClass);
+              errObj = new HariObject(i.config.builtinErrorClass);
               const msg = e instanceof ThrownSignal ? String(e.value) : localize(i.config.locale, e);
               errObj.props[i.config.builtinErrorMessage] = msg;
             }
@@ -313,7 +313,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
         const mem = stmt.target;
         const obj = await evaluateNode(i, mem.object, env);
 
-        if (obj instanceof HajaObject) {
+        if (obj instanceof HariObject) {
           if (mem.property.type === "Identifier") {
             const cls = i.classes[obj.className];
             let setter: ast.SetterInfo | null = null;

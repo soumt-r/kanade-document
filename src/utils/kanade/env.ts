@@ -1,6 +1,6 @@
 // Mirrors hana/vm/env.go's Environment: a parent-pointer scope chain with a
 // `this` fallback for instance-member lookup inside methods.
-import { HajaObject } from "./object";
+import { HariObject } from "./object";
 import { RuntimeError, Codes } from "./errs";
 
 export class Environment {
@@ -8,7 +8,7 @@ export class Environment {
   private constants = new Set<string>();
   private types = new Map<string, string>(); // declared [타입] per variable of this scope
   parent: Environment | null;
-  this_: HajaObject | null = null;
+  this_: HariObject | null = null;
 
   constructor(parent: Environment | null) {
     this.parent = parent;
@@ -35,7 +35,7 @@ export class Environment {
 
   // ownerOf resolves name the way assign() does: the scope holding it as a
   // variable, else the object whose field it is, else further out.
-  ownerOf(name: string): Environment | HajaObject | null {
+  ownerOf(name: string): Environment | HariObject | null {
     if (this.vars.has(name)) return this;
     if (this.this_ !== null && Object.prototype.hasOwnProperty.call(this.this_.props, name)) return this.this_;
     return this.parent ? this.parent.ownerOf(name) : null;

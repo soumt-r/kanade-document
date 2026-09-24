@@ -6,7 +6,7 @@
 // against these classes exactly where Go would type-switch on its structs.
 import type { Expression } from "./ast";
 
-export class HajaObject {
+export class HariObject {
   className: string;
   props: Record<string, unknown> = {};
 
@@ -17,7 +17,7 @@ export class HajaObject {
 
 export class BoundMethod {
   constructor(
-    public object: HajaObject,
+    public object: HariObject,
     public funcName: string,
     public isSuper = false,
   ) {}
@@ -57,7 +57,7 @@ export class BoundStaticMethod {
 }
 
 export class SuperReferenceValue {
-  constructor(public object: HajaObject) {}
+  constructor(public object: HariObject) {}
 }
 
 // ClassReference는 클래스 자체를 값으로 취급할 때 씁니다 (정적 멤버 접근, instanceof 등).
