@@ -108,6 +108,8 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       throw new ReturnSignal(val);
     }
     case "BreakStatement":
+      // outside any loop: an IllegalBreakError where it runs (Runtime spec 4.4)
+      if (!env.inLoop()) throw new RuntimeError(Codes.IllegalBreak);
       throw new BreakSignal();
     case "ImportStatement": {
       // Only hana's standard library (native modules, `[수학]` style) can be
@@ -203,6 +205,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       // a loop walks the list as it was when the loop began
       for (const item of Array.from(listVal)) {
         const loopEnv = new Environment(env);
+        loopEnv.loop = true;
         loopEnv.declare(itemName, item);
         try {
           for (const bs of stmt.body.statements) await executeStmt(i, bs, loopEnv);
@@ -219,6 +222,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
         if (!requireBool(condVal, i)) break;
 
         const loopEnv = new Environment(env);
+        loopEnv.loop = true;
         try {
           for (const bs of stmt.body.statements) await executeStmt(i, bs, loopEnv);
         } catch (e) {
@@ -237,6 +241,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       const step = startVal > endVal ? -1 : 1;
       for (let v = startVal; step > 0 ? v <= endVal : v >= endVal; v += step) {
         const loopEnv = new Environment(env);
+        loopEnv.loop = true;
         if (stmt.loopVar !== "") loopEnv.declare(stmt.loopVar, v);
         else loopEnv.declare(i.config.defaultIndexName, v);
         try {
