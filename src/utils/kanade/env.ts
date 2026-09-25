@@ -9,6 +9,7 @@ export class Environment {
   private types = new Map<string, string>(); // declared [타입] per variable of this scope
   parent: Environment | null;
   this_: HariObject | null = null;
+  loop = false; // a loop pass's scope: a 繰り返しを終わろう below it has a loop to leave
 
   constructor(parent: Environment | null) {
     this.parent = parent;
@@ -41,9 +42,21 @@ export class Environment {
     return this.parent ? this.parent.ownerOf(name) : null;
   }
 
+  // The nearest scope that has the name decides, so a loop or handler variable that
+  // hides an outer constant of the same name is not a constant (Runtime spec 1.1).
   isConst(name: string): boolean {
-    if (this.constants.has(name)) return true;
+    if (this.vars.has(name)) return this.constants.has(name);
     if (this.parent) return this.parent.isConst(name);
+    return false;
+  }
+
+  // inLoop reports whether a 繰り返しを終わろう run here is inside a loop. Scopes chain
+  // lexically (a function body's parent is the globals, not the caller's scope), so
+  // a loop around the call does not count (Runtime spec 4.4).
+  inLoop(): boolean {
+    for (let e: Environment | null = this; e !== null; e = e.parent) {
+      if (e.loop) return true;
+    }
     return false;
   }
 
