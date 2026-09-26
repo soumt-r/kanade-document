@@ -7,7 +7,7 @@
 // previous ad hoc engine to keep index.ts's public contract unchanged).
 import * as ast from "./ast";
 import { Environment } from "./env";
-import { HariObject } from "./object";
+import { ClassReference, HariObject } from "./object";
 import { type LangConfig, JapaneseConfig } from "./config";
 import { evaluateNode } from "./evalExpr";
 import { executeStmt } from "./execStmt";
@@ -134,6 +134,8 @@ export class KanadeInterpreter {
     if (val === null || val === undefined) return this.config.nullString;
     if (typeof val === "string") return val;
     if (val instanceof HariObject) return this.config.objectFormat.replace("%s", val.className);
+    // A class used as a value ([동물]) shows the way its objects do.
+    if (val instanceof ClassReference) return this.config.objectFormat.replace("%s", val.className);
     if (typeof val === "boolean") return val ? this.config.trueString : this.config.falseString;
     if (Array.isArray(val)) return "[" + val.map((el) => this.formatValue(el)).join(", ") + "]";
     if (val instanceof Map) {
