@@ -351,7 +351,8 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           if (mem.property.type === "NumberLiteral") {
             idx = mem.property.value - 1;
           } else {
-            const propVal = await evaluateNode(i, mem.property, env).catch(() => undefined);
+            // A key that cannot be computed reports its own error (as Go's engines).
+            const propVal = await evaluateNode(i, mem.property, env);
             if (typeof propVal === "number") idx = propVal - 1;
           }
           if (idx >= 0 && idx < obj.length) obj[idx] = val;

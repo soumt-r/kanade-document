@@ -496,7 +496,8 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         if (isFunc) return new BoundListMethod(obj, propName, expr.object);
         if (propName === i.config.lengthWord) return obj.length;
 
-        const idxObj = await evaluateNode(i, property, env).catch(() => undefined);
+        // A key that cannot be computed reports its own error (as Go's engines).
+        const idxObj = await evaluateNode(i, property, env);
         if (typeof idxObj === "number") {
           const idx = idxObj - 1;
           if (idx < 0 || idx >= obj.length) throw new RuntimeError(Codes.ListIndexOutOfRange);
@@ -550,7 +551,8 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         if (isFunc) return new BoundStringMethod(obj, propName);
         if (propName === i.config.lengthWord) return Array.from(obj).length;
 
-        const idxObj = await evaluateNode(i, property, env).catch(() => undefined);
+        // A key that cannot be computed reports its own error (as Go's engines).
+        const idxObj = await evaluateNode(i, property, env);
         if (typeof idxObj === "number") {
           const idx = idxObj - 1;
           const chars = Array.from(obj);
