@@ -11,7 +11,7 @@ import { HariObject } from "./object";
 import { type LangConfig, JapaneseConfig } from "./config";
 import { evaluateNode } from "./evalExpr";
 import { executeStmt } from "./execStmt";
-import { KanadeRuntimeError } from "./errors";
+import { KanadeRuntimeError, ReturnSignal } from "./errors";
 import { RuntimeError, Codes, localize } from "./errs";
 import { BuiltinFunction, type BuiltinFn, type NativeModule } from "./object";
 
@@ -110,7 +110,13 @@ export class KanadeInterpreter {
         } else if (stmt.type === "InterfaceDeclaration") {
           // 스킵
         } else {
-          await executeStmt(this, stmt, this.globalEnv);
+          try {
+            await executeStmt(this, stmt, this.globalEnv);
+          } catch (e) {
+            // 최상위의 돌려주자는 프로그램을 끝낸다 (Go 엔진과 같음).
+            if (e instanceof ReturnSignal) break;
+            throw e;
+          }
         }
       }
     } catch (e) {
