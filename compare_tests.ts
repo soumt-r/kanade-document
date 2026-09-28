@@ -38,6 +38,10 @@ async function runTypeScriptEngine(code: string, stdin = ''): Promise<string> {
         const lexer = new Lexer(code);
         const parser = new Parser(lexer.tokens);
         const ast = parser.parseProgram();
+        // Like `hana run`: a program with syntax errors is reported, not run.
+        if (parser.diagnostics.length > 0) {
+            return withError("", parser.diagnostics.map((d) => localize(JapaneseConfig.locale, syntaxError(d))).join("\n"));
+        }
         const lines = stdin === '' ? [] : stdin.replace(/\n$/, '').split('\n');
         const interpreter = new Interpreter(ast, async () => lines.shift() ?? "");
         registerStandardLibrary(interpreter);
@@ -70,6 +74,11 @@ function runGoEngine(code: string, stdin = ''): string {
         unlinkSync(tempFile);
         const stdout = e.stdout ? e.stdout.toString().trim() : "";
         const stderr = e.stderr ? e.stderr.toString() : "";
+        // Syntax errors: a heading, then "  - <message>" per problem (stdout).
+        const out = stdout.split(/\r?\n/);
+        if (out.length > 1 && out[0].endsWith(':') && out.slice(1).every((l: string) => l.startsWith('  - '))) {
+            return withError("", out.slice(1).map((l: string) => l.slice(4)).join("\n"));
+        }
         const m = stderr.match(/^ランタイムエラー: (.*)$/m);
         return withError(stdout, m ? m[1].trim() : "");
     }
