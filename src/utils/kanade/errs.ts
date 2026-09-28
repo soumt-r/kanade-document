@@ -88,14 +88,3 @@ export function accessViolation(access: string, isMethod: boolean, name: string)
   return new RuntimeError(isMethod ? Codes.PrivateMethodAccess : Codes.PrivateFieldAccess, name);
 }
 
-// typeNameOf names a runtime value's type in plain English for messages that
-// mention it, without leaking JS internals.
-export function typeNameOf(v: unknown): string {
-  if (v === null || v === undefined) return "null";
-  if (typeof v === "number") return "number";
-  if (typeof v === "string") return "string";
-  if (typeof v === "boolean") return "boolean";
-  if (Array.isArray(v)) return "list";
-  if (v instanceof Map) return "dict";
-  return "object";
-}

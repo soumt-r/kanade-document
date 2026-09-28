@@ -27,7 +27,7 @@ import {
 } from "./object";
 import { ReturnSignal } from "./errors";
 import { parseExpressionFromSource } from "./parser";
-import { RuntimeError, Codes, accessViolation, typeNameOf } from "./errs";
+import { RuntimeError, Codes, accessViolation } from "./errs";
 
 // execBlock runs a statement list in env and returns the function's return
 // value if a ReturnStatement fired inside it (mirrors every Go call site's
@@ -187,6 +187,37 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
     return null;
   }
   throw new RuntimeError(Codes.NotCallable);
+}
+
+// callOperatorMethod runs the method op names (config.operatorMethods, "=="
+// for both == and !=) of an object on the left, as `A의 <기호 더하기>(B)` would
+// (spec 3.5): found through the class's ancestors, arguments and result
+// checked, counted in the call nesting. Mirrors hana's vm/operators.go.
+async function callOperatorMethod(
+  i: HariInterpreter,
+  env: Environment,
+  left: unknown,
+  op: string,
+  right: unknown,
+): Promise<{ found: boolean; value?: unknown }> {
+  if (!(left instanceof HariObject)) return { found: false };
+  const name = i.config.operatorMethods[op];
+  const cls = i.classes[left.className];
+  if (name === undefined || !cls) return { found: false };
+  let found = false;
+  findInClassChain(i, cls, (body) => {
+    found = body.some((s) => s.type === "FunctionDeclaration" && s.name.value === name);
+    return found;
+  });
+  if (!found) return { found: false };
+  // A call, so it counts in the nesting as a call expression does.
+  if (i.callDepth >= MAX_CALL_DEPTH) throw new RuntimeError(Codes.CallTooDeep, MAX_CALL_DEPTH);
+  i.callDepth++;
+  try {
+    return { found: true, value: await callValue(i, env, new BoundMethod(left, name), [right]) };
+  } finally {
+    i.callDepth--;
+  }
 }
 
 export async function evaluateNode(i: KanadeInterpreter, expr: ast.Expression | null, env: Environment): Promise<unknown> {
@@ -561,7 +592,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         }
         throw new RuntimeError(Codes.MemberAccessOnString);
       }
-      throw new RuntimeError(Codes.MemberAccessUnsupported, typeNameOf(obj));
+      throw new RuntimeError(Codes.MemberAccessUnsupported, describeType(i.config.types, obj, i));
     }
     case "LogicalExpression": {
       const left = await evaluateNode(i, expr.left, env);
@@ -586,24 +617,13 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
       }
 
       if (expr.operator === "==" || expr.operator === "!=") {
-        if (left instanceof HariObject) {
-          const cls = i.classes[left.className];
-          let funcDecl: ast.FunctionDeclaration | null = null;
-          for (const stmt of cls.body) {
-            if (stmt.type === "FunctionDeclaration" && stmt.name.value === i.config.equalsMethodName) {
-              funcDecl = stmt;
-              break;
-            }
-          }
-          if (funcDecl !== null) {
-            const funcEnv = new Environment(i.globalEnv);
-            funcEnv.this_ = left;
-            funcEnv.declare("__selfClass__", left.className);
-            if (funcDecl.params.length > 0) funcEnv.declare(funcDecl.params[0].name.value, right);
-            const result = checkReturn(i, funcDecl, await execBlock(i, funcDecl.body.statements, funcEnv));
-            if (expr.operator === "!=" && typeof result === "boolean") return !result;
-            return result;
-          }
+        // `!=` asks the same method and turns its answer around; an answer of
+        // 비어있음 (nothing returned) means "not equal".
+        const res = await callOperatorMethod(i, env, left, "==", right);
+        if (res.found) {
+          if (res.value === null || res.value === undefined) return expr.operator === "!=";
+          if (expr.operator === "!=" && typeof res.value === "boolean") return !res.value;
+          return res.value;
         }
         return expr.operator === "==" ? left === right : left !== right;
       }
@@ -623,29 +643,8 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
           throw new RuntimeError(Codes.UnknownOperator, expr.operator);
       }
 
-      // Operator overloading (spec 3.5): an object on the left whose class (or
-      // an ancestor) has the operator's method runs `A의 <기호 더하기>(B)`.
-      if (left instanceof HariObject) {
-        const name = i.config.operatorMethods[expr.operator];
-        const cls = i.classes[left.className];
-        if (name !== undefined && cls) {
-          let found = false;
-          findInClassChain(i, cls, (body) => {
-            found = body.some((s) => s.type === "FunctionDeclaration" && s.name.value === name);
-            return found;
-          });
-          if (found) {
-            // A call, so it counts in the nesting as a call expression does.
-            if (i.callDepth >= MAX_CALL_DEPTH) throw new RuntimeError(Codes.CallTooDeep, MAX_CALL_DEPTH);
-            i.callDepth++;
-            try {
-              return await callValue(i, env, new BoundMethod(left, name), [right]);
-            } finally {
-              i.callDepth--;
-            }
-          }
-        }
-      }
+      const overloaded = await callOperatorMethod(i, env, left, expr.operator, right);
+      if (overloaded.found) return overloaded.value;
 
       // Null-safe (Runtime spec 2.4): only the equality operators may see 비어있음.
       if (left === null || left === undefined || right === null || right === undefined) {

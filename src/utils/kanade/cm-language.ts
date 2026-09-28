@@ -38,7 +38,7 @@ const kanadeParser: StreamParser<unknown> = {
     if (stream.match(/^「(?:\\[\s\S]|[^」\\])*」/)) return "string";
     if (stream.match(/^枠「(?:\{[^{}]*\}|\\[\s\S]|[^」\\{])*」/)) return "string";
     if (stream.match(/^【[^】]+】/)) return "typeName";
-    if (stream.match(/^〈[^〉]+〉/)) return "propertyName";
+    if (stream.match(/^〈[^ \t\r\n=〉][^〉\n]*〉/)) return "propertyName";
     if (stream.match(/^『[^』]+』/)) return "variableName";
 
     // 주석: `(参考)` 뒤나 `(参考:...)`부터 줄 끝까지 (렉서도 그렇게 자른다)

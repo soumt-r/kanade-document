@@ -32,15 +32,8 @@ export interface LangConfig {
   stringSplitMethod: string;
   stringContainsMethod: string;
 
-  // equalsMethodName is the magic method evalExpr.ts's BinaryExpression
-  // case looks for on a HariObject operand of ==/!= (operator overloading).
-  // Mirrors Go's vm/config.go EqualsMethodName — was hardcoded to Korean
-  // "기호 같다" regardless of language until a real kanade-docs example
-  // (oop/1-classes.md's 〈記号 同じだ〉) was found to never match.
-  equalsMethodName: string;
-
-  // operatorMethods names the method each arithmetic or comparison operator
-  // calls on an object on its left, by the operator's symbol (spec 3.5).
+  // operatorMethods names the method each operator calls on an object on its
+  // left, by the operator's symbol ("==" for both == and !=; spec 3.5).
   // Mirrors Go's magic.Hari / magic.Kanade.
   operatorMethods: Record<string, string>;
 
@@ -96,8 +89,7 @@ export const JapaneseConfig: LangConfig = {
   stringContainsMethod: "含むか確認",
   // kanade-docs/src/pages/docs/oop/1-classes.md's actual method name
   // (〈記号 同じだ〉, delimiters stripped).
-  equalsMethodName: "記号 同じだ",
-  operatorMethods: { "+": "記号 足す", "-": "記号 引く", "*": "記号 掛ける", "/": "記号 割る", "%": "記号 余り", ">": "記号 大きい", "<": "記号 小さい", ">=": "記号 以上", "<=": "記号 以下" },
+  operatorMethods: { "==": "記号 同じだ", "+": "記号 足す", "-": "記号 引く", "*": "記号 掛ける", "/": "記号 割る", "%": "記号 余り", ">": "記号 大きい", "<": "記号 小さい", ">=": "記号 以上", "<=": "記号 以下" },
   locale: "ja",
   types: { number: "数字", string: "文字列", boolean: "論理", any: "何でも", list: "リスト", dict: "辞書", null: "空っぽ" },
 };
