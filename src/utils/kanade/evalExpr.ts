@@ -189,20 +189,21 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
   throw new RuntimeError(Codes.NotCallable);
 }
 
-// callOperatorMethod runs the method op names (config.operatorMethods, "=="
-// for both == and !=) of an object on the left, as `A의 <기호 더하기>(B)` would
-// (spec 3.5): found through the class's ancestors, arguments and result
-// checked, counted in the call nesting. Mirrors hana's vm/operators.go.
+// callOperatorMethod runs the method op names (config.operatorMethods: "=="
+// for both == and !=, "r+" … for an object on the right) of target, given
+// arg, as `A의 <기호 더하기>(B)` would (spec 3.5): found through the class's
+// ancestors, arguments and result checked, counted in the call nesting.
+// Mirrors hana's vm/operators.go.
 async function callOperatorMethod(
   i: HariInterpreter,
   env: Environment,
-  left: unknown,
+  target: unknown,
   op: string,
-  right: unknown,
+  arg: unknown,
 ): Promise<{ found: boolean; value?: unknown }> {
-  if (!(left instanceof HariObject)) return { found: false };
+  if (!(target instanceof HariObject)) return { found: false };
   const name = i.config.operatorMethods[op];
-  const cls = i.classes[left.className];
+  const cls = i.classes[target.className];
   if (name === undefined || !cls) return { found: false };
   let found = false;
   findInClassChain(i, cls, (body) => {
@@ -214,7 +215,7 @@ async function callOperatorMethod(
   if (i.callDepth >= MAX_CALL_DEPTH) throw new RuntimeError(Codes.CallTooDeep, MAX_CALL_DEPTH);
   i.callDepth++;
   try {
-    return { found: true, value: await callValue(i, env, new BoundMethod(left, name), [right]) };
+    return { found: true, value: await callValue(i, env, new BoundMethod(target, name), [arg]) };
   } finally {
     i.callDepth--;
   }
@@ -645,6 +646,10 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
 
       const overloaded = await callOperatorMethod(i, env, left, expr.operator, right);
       if (overloaded.found) return overloaded.value;
+      // An arithmetic operator the left does not answer: the right's
+      // `<기호 오른쪽 더하기>` …, given the left (`B의 <기호 오른쪽 더하기>(A)`).
+      const reflected = await callOperatorMethod(i, env, right, "r" + expr.operator, left);
+      if (reflected.found) return reflected.value;
 
       // Null-safe (Runtime spec 2.4): only the equality operators may see 비어있음.
       if (left === null || left === undefined || right === null || right === undefined) {

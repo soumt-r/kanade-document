@@ -33,7 +33,8 @@ export interface LangConfig {
   stringContainsMethod: string;
 
   // operatorMethods names the method each operator calls on an object on its
-  // left, by the operator's symbol ("==" for both == and !=; spec 3.5).
+  // left, by the operator's symbol ("==" for both == and !=; spec 3.5), and
+  // ("r+" …) the one an arithmetic operator calls on an object on its right.
   // Mirrors Go's magic.Hari / magic.Kanade.
   operatorMethods: Record<string, string>;
 
@@ -89,7 +90,7 @@ export const JapaneseConfig: LangConfig = {
   stringContainsMethod: "含むか確認",
   // kanade-docs/src/pages/docs/oop/1-classes.md's actual method name
   // (〈記号 同じだ〉, delimiters stripped).
-  operatorMethods: { "==": "記号 同じだ", "+": "記号 足す", "-": "記号 引く", "*": "記号 掛ける", "/": "記号 割る", "%": "記号 余り", ">": "記号 大きい", "<": "記号 小さい", ">=": "記号 以上", "<=": "記号 以下" },
+  operatorMethods: { "==": "記号 同じだ", "+": "記号 足す", "-": "記号 引く", "*": "記号 掛ける", "/": "記号 割る", "%": "記号 余り", ">": "記号 大きい", "<": "記号 小さい", ">=": "記号 以上", "<=": "記号 以下", "r+": "記号 右から足す", "r-": "記号 右から引く", "r*": "記号 右から掛ける", "r/": "記号 右から割る", "r%": "記号 右から余り" },
   locale: "ja",
   types: { number: "数字", string: "文字列", boolean: "論理", any: "何でも", list: "リスト", dict: "辞書", null: "空っぽ" },
 };
