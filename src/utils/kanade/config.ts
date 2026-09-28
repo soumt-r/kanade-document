@@ -39,6 +39,11 @@ export interface LangConfig {
   // (oop/1-classes.md's 〈記号 同じだ〉) was found to never match.
   equalsMethodName: string;
 
+  // operatorMethods names the method each arithmetic or comparison operator
+  // calls on an object on its left, by the operator's symbol (spec 3.5).
+  // Mirrors Go's magic.Hari / magic.Kanade.
+  operatorMethods: Record<string, string>;
+
   // locale picks the wording errs.localize renders a runtime error in wherever
   // it becomes user-visible text (a `発生したら` handler's caught message, the
   // Playground's error output). Mirrors vm.LangConfig.Locale.
@@ -92,6 +97,7 @@ export const JapaneseConfig: LangConfig = {
   // kanade-docs/src/pages/docs/oop/1-classes.md's actual method name
   // (〈記号 同じだ〉, delimiters stripped).
   equalsMethodName: "記号 同じだ",
+  operatorMethods: { "+": "記号 足す", "-": "記号 引く", "*": "記号 掛ける", "/": "記号 割る", "%": "記号 余り", ">": "記号 大きい", "<": "記号 小さい", ">=": "記号 以上", "<=": "記号 以下" },
   locale: "ja",
   types: { number: "数字", string: "文字列", boolean: "論理", any: "何でも", list: "リスト", dict: "辞書", null: "空っぽ" },
 };

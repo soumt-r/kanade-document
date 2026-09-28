@@ -623,6 +623,30 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
           throw new RuntimeError(Codes.UnknownOperator, expr.operator);
       }
 
+      // Operator overloading (spec 3.5): an object on the left whose class (or
+      // an ancestor) has the operator's method runs `A의 <기호 더하기>(B)`.
+      if (left instanceof HariObject) {
+        const name = i.config.operatorMethods[expr.operator];
+        const cls = i.classes[left.className];
+        if (name !== undefined && cls) {
+          let found = false;
+          findInClassChain(i, cls, (body) => {
+            found = body.some((s) => s.type === "FunctionDeclaration" && s.name.value === name);
+            return found;
+          });
+          if (found) {
+            // A call, so it counts in the nesting as a call expression does.
+            if (i.callDepth >= MAX_CALL_DEPTH) throw new RuntimeError(Codes.CallTooDeep, MAX_CALL_DEPTH);
+            i.callDepth++;
+            try {
+              return await callValue(i, env, new BoundMethod(left, name), [right]);
+            } finally {
+              i.callDepth--;
+            }
+          }
+        }
+      }
+
       // Null-safe (Runtime spec 2.4): only the equality operators may see 비어있음.
       if (left === null || left === undefined || right === null || right === undefined) {
         throw new RuntimeError(Codes.NullOperand, expr.operator);
