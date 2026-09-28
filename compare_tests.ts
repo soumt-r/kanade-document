@@ -401,7 +401,12 @@ const EXTRA_CASES: { name: string; code: string; stdin?: string }[] = [
 ];
 
 // 구문 오류 문구: TS 엔진의 진단을 현지화한 문장이 hana가 보여 주는 문장과 같아야 한다.
-const SYNTAX_CASES: string[] = ["「あ」を出力しよう )", "「あ」を出力しよう ＠", "1 +"];
+const SYNTAX_CASES: string[] = [
+    "「あ」を出力しよう )", "「あ」を出力しよう ＠", "1 +",
+    // 同じところに同じ名前の関数、設計の二つ目のコンストラクタ(オーバーロードはない)
+    "〈挨拶〉を作ろう():\n    1を返そう\n〈挨拶〉を作ろう(『x』):\n    『x』を返そう\n",
+    "【点】を設計しよう:\n    最初に作られる時()次のようにしよう:\n        1を出力しよう\n    最初に作られる時(『x』)次のようにしよう:\n        2を出力しよう\n    〈値〉を作ろう():\n        1を返そう\n    〈値〉を作ろう():\n        2を返そう\n",
+];
 
 function goSyntaxMessages(code: string): string[] {
     const tempFile = 'temp_syntax.knd';

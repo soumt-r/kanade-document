@@ -65,7 +65,9 @@ export function localize(loc: Locale, err: unknown): string {
 // syntaxError is the typed, localizable error for a parser diagnostic: an
 // unknown token, or (empty literal) running off the end of the input. Mirrors
 // parser/hari's Diagnostic.Err in hana.
-export function syntaxError(d: { line: number; col: number; literal: string }): RuntimeError {
+export function syntaxError(d: { line: number; col: number; literal: string; kind?: string }): RuntimeError {
+  if (d.kind === "DuplicateFunction") return new RuntimeError(Codes.DuplicateFunction, d.line, d.col + 1, d.literal);
+  if (d.kind === "DuplicateConstructor") return new RuntimeError(Codes.DuplicateConstructor, d.line, d.col + 1);
   if (d.literal === "") return new RuntimeError(Codes.UnexpectedEnd, d.line);
   return new RuntimeError(Codes.UnexpectedToken, d.line, d.col + 1, d.literal);
 }

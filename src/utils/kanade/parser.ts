@@ -18,6 +18,39 @@ export interface ParseDiagnostic {
   col: number;
   length: number;
   literal: string; // empty means the parser ran off the end of the input
+  // What it is about (unknown token by default): a function made twice in one
+  // place, or a class's second constructor (see duplicates).
+  kind?: "UnknownToken" | "DuplicateFunction" | "DuplicateConstructor";
+}
+
+// duplicates finds functions made twice in one place (the file, a function's
+// body, a class) and second constructors of a class, in source order: each
+// statement is checked against the ones before it, then its own body. Hari
+// has no overloading (a child class overriding a method is another place).
+// Mirrors parser/hari's duplicates in hana.
+function duplicates(stmts: ast.Statement[], inClass: boolean): ParseDiagnostic[] {
+  const out: ParseDiagnostic[] = [];
+  const seen = new Set<string>();
+  let constructors = 0;
+  for (const s of stmts) {
+    if (s.type === "FunctionDeclaration") {
+      const key = inClass && s.isStatic ? "static " + s.name.value : s.name.value;
+      if (seen.has(key)) {
+        out.push({ kind: "DuplicateFunction", line: s.srcLine ?? 0, col: s.srcCol ?? 0, length: s.srcLen ?? 0, literal: s.name.value });
+      }
+      seen.add(key);
+      if (s.body) out.push(...duplicates(s.body.statements, false));
+    } else if (s.type === "ConstructorDeclaration") {
+      constructors++;
+      if (constructors > 1) {
+        out.push({ kind: "DuplicateConstructor", line: s.srcLine ?? 0, col: s.srcCol ?? 0, length: s.srcLen ?? 0, literal: "constructor" });
+      }
+      out.push(...duplicates(s.body, false));
+    } else if (s.type === "ClassDeclaration") {
+      out.push(...duplicates(s.body, true));
+    }
+  }
+  return out;
 }
 
 // endsCondition: a token that can follow a complete condition — the close of an
@@ -77,6 +110,7 @@ export class Parser {
       const stmt = this.parseStatement();
       if (stmt) statements.push(stmt);
     }
+    this.diags.push(...duplicates(statements, false));
     return { type: "Program", statements };
   }
 
@@ -381,6 +415,7 @@ export class Parser {
 
     const nameTok = this.consume();
     let name = nameTok.literal;
+    const src = { srcLine: nameTok.line, srcCol: nameTok.col, srcLen: nameTok.literal.length };
     name = name.slice(this.lang.delimLen, name.length - this.lang.delimLen); // FUNCTION 델리미터 제거
     if (this.peek() && this.peek()!.type === tok.PARTICLE) this.consume();
     const action = this.consume();
@@ -437,6 +472,7 @@ export class Parser {
       accessModifier: access,
       isStatic,
       returnType,
+      ...src,
     };
   }
 
@@ -989,7 +1025,7 @@ export class Parser {
   }
 
   private parseConstructor(): ast.ConstructorDeclaration {
-    this.consume();
+    const start = this.consume();
     const params: ast.Parameter[] = [];
     if (this.peek() && this.peek()!.type === tok.LPAREN) {
       this.consume();
@@ -1022,7 +1058,15 @@ export class Parser {
     if (this.peek() && this.peek()!.type === tok.KW_DO_AS) this.consume();
     while (this.peek() !== null && this.peek()!.type !== tok.COLON) this.consume();
     const block = this.parseBlock();
-    return { type: "ConstructorDeclaration", id: { type: "Identifier", value: this.lang.constructorFunctionName }, params, body: block.statements };
+    return {
+      type: "ConstructorDeclaration",
+      id: { type: "Identifier", value: this.lang.constructorFunctionName },
+      params,
+      body: block.statements,
+      srcLine: start.line,
+      srcCol: start.col,
+      srcLen: start.literal.length,
+    };
   }
 }
 

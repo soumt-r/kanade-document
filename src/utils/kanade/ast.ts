@@ -366,6 +366,10 @@ export interface FunctionDeclaration {
   accessModifier: string; // "public" | "private" | "protected"
   isStatic: boolean;
   returnType: TypeReference | null;
+  // Where the name is written (for the parser's diagnostics; not syntax).
+  srcLine?: number;
+  srcCol?: number;
+  srcLen?: number;
 }
 
 export interface InterfaceMethod {
@@ -378,4 +382,8 @@ export interface ConstructorDeclaration {
   id: Identifier;
   params: Parameter[];
   body: Statement[];
+  // Where it starts (for the parser's diagnostics; not syntax).
+  srcLine?: number;
+  srcCol?: number;
+  srcLen?: number;
 }
