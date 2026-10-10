@@ -39,6 +39,14 @@ export class BoundStringMethod {
   ) {}
 }
 
+// A dictionary's <포함확인> (the name is config.stringContainsMethod), looked up but not yet called.
+export class BoundDictMethod {
+  constructor(
+    public dict: Map<unknown, unknown>,
+    public funcName: string,
+  ) {}
+}
+
 export class BoundListMethod {
   // target is the MemberExpression's Object expression the list came from —
   // a list held by a constant variable cannot be emptied (mirrors Go's object.go).

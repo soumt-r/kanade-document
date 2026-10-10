@@ -21,6 +21,7 @@ import {
   BuiltinFunction,
   BoundStringMethod,
   BoundListMethod,
+  BoundDictMethod,
   BoundStaticMethod,
   SuperReferenceValue,
   ClassReference,
@@ -28,6 +29,7 @@ import {
 import { ReturnSignal } from "./errors";
 import { parseExpressionFromSource } from "./parser";
 import { RuntimeError, Codes, accessViolation } from "./errs";
+import { compareBytes } from "./stdImpls";
 
 // execBlock runs a statement list in env and returns the function's return
 // value if a ReturnStatement fired inside it (mirrors every Go call site's
@@ -134,6 +136,13 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
       const sub = args[0];
       if (typeof sub !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
       return callee.value.includes(sub);
+    }
+    throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
+  } else if (callee instanceof BoundDictMethod) {
+    // 사전의 메서드는 <포함확인>(키) 하나: 그 키가 있는지 (스펙 5.1).
+    if (callee.funcName === i.config.stringContainsMethod) {
+      if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
+      return callee.dict.has(args[0]);
     }
     throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
   } else if (callee instanceof BoundListMethod) {
@@ -537,6 +546,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         }
         throw new RuntimeError(Codes.ListIndexMustBeNumber);
       } else if (obj instanceof Map) {
+        if (property.type === "FunctionReference") return new BoundDictMethod(obj, property.name);
         const key = await evaluateNode(i, property, env);
         if (obj.has(key)) return obj.get(key);
         throw new RuntimeError(Codes.DictKeyNotFound, key);
@@ -682,8 +692,20 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
       }
 
       // String addition only joins strings: no implicit conversion (Runtime spec 2.2).
-      if (expr.operator === "+" && typeof left === "string" && typeof right === "string") {
-        return left + right;
+      // Strings compare in code point order (Runtime spec 5.4), like Go's byte order.
+      if (typeof left === "string" && typeof right === "string") {
+        if (expr.operator === "+") return left + right;
+        const d = compareBytes(left, right);
+        switch (expr.operator) {
+          case ">":
+            return d > 0;
+          case "<":
+            return d < 0;
+          case ">=":
+            return d >= 0;
+          case "<=":
+            return d <= 0;
+        }
       }
       throw new RuntimeError(
         Codes.OperandTypeMismatch,
