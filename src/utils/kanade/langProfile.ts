@@ -23,6 +23,8 @@ export interface LangProfile {
   conditionThenWords: string[];
   poppedValueWord: string;
   memberParticle: string;
+  // Closes an index after the member particle ('목록'의 'k'번째); the member chain eats it.
+  ordinalParticle: string;
   typeInWord: string;
   templatePrefix: string;
   templateSuffix: string;
@@ -56,6 +58,7 @@ export const kanadeProfile: LangProfile = {
   conditionThenWords: ["なら", "ならば"],
   poppedValueWord: "値",
   memberParticle: "の",
+  ordinalParticle: "番目",
   typeInWord: "の", // kanade-docs reuses the member particle for this
   templatePrefix: "枠「",
   templateSuffix: "」",

@@ -28,6 +28,7 @@ import {
 import { ReturnSignal } from "./errors";
 import { parseExpressionFromSource } from "./parser";
 import { RuntimeError, Codes, accessViolation } from "./errs";
+import { compareBytes } from "./stdImpls";
 
 // execBlock runs a statement list in env and returns the function's return
 // value if a ReturnStatement fired inside it (mirrors every Go call site's
@@ -682,8 +683,20 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
       }
 
       // String addition only joins strings: no implicit conversion (Runtime spec 2.2).
-      if (expr.operator === "+" && typeof left === "string" && typeof right === "string") {
-        return left + right;
+      // Strings compare in code point order (Runtime spec 5.4), like Go's byte order.
+      if (typeof left === "string" && typeof right === "string") {
+        if (expr.operator === "+") return left + right;
+        const d = compareBytes(left, right);
+        switch (expr.operator) {
+          case ">":
+            return d > 0;
+          case "<":
+            return d < 0;
+          case ">=":
+            return d >= 0;
+          case "<=":
+            return d <= 0;
+        }
       }
       throw new RuntimeError(
         Codes.OperandTypeMismatch,

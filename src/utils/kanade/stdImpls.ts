@@ -109,7 +109,7 @@ function writeJSON(v: unknown, indent: number, depth: number): string {
 
 // Go sorts strings by UTF-8 bytes, which is code point order; JS's default sort
 // is by UTF-16 units, which differs for characters past U+FFFF.
-function compareBytes(a: string, b: string): number {
+export function compareBytes(a: string, b: string): number {
   const ax = Array.from(a);
   const bx = Array.from(b);
   const n = Math.min(ax.length, bx.length);

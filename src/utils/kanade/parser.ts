@@ -564,11 +564,16 @@ export class Parser {
       next.type !== tok.KW_OR
     ) {
       // Possibly SOV: Left Right Compare
+      const start = next;
       const right = this.parseExpression();
       if (this.peek() && this.peek()!.type === tok.PARTICLE) this.consume();
       if (this.peek() && this.peek()!.type === tok.COMPARE) {
         const op = this.lang.normalizeCompareOpSOV(this.consume().literal);
         cond = { type: "BinaryExpression", left: cond, operator: op, right };
+      } else {
+        // No comparison came: report the right side instead of dropping it
+        // (`('a'의 'k'번째 - 5)` once lost its `- 5` here).
+        this.diags.push({ line: start.line, col: start.col, length: Array.from(start.literal).length, literal: start.literal });
       }
     } else if (next !== null && next.type === tok.COMPARE) {
       // SVO: Left Compare Right
@@ -886,6 +891,13 @@ export class Parser {
         this.consume();
         const prop = this.parsePrimary();
         expr = { type: "MemberExpression", object: expr, property: prop };
+        // '목록'의 'k'번째: the ordinal closes the index, so an operator, a
+        // comparison or another 의 after it applies to the element.
+        if (this.peek()?.type === tok.PARTICLE && this.peek()!.literal === this.lang.ordinalParticle) {
+          this.consume();
+          // 하리의 장식용 "값"('과일'의 5번째 값); 카나데의 "の値"는 위 갈래가 받는다.
+          if (this.peek()?.type === tok.IDENT && this.peek()!.literal === this.lang.poppedValueWord) this.consume();
+        }
       } else if (t.type === tok.PARTICLE && t.literal === this.lang.memberParticle) {
         this.consume();
       } else if (t.type === tok.LPAREN) {
