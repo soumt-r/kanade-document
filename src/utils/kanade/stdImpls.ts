@@ -120,6 +120,20 @@ export function compareBytes(a: string, b: string): number {
   return ax.length - bx.length;
 }
 
+// The order `'사전'의 '키'마다 반복하자` walks a dictionary's keys in (Go's value.SortedKeys):
+// numbers from small to large, then strings in code point order, then 거짓 and 참; any other key last.
+export function sortedKeys(dict: Map<unknown, unknown>): unknown[] {
+  const rank = (k: unknown) => (typeof k === "number" ? 0 : typeof k === "string" ? 1 : typeof k === "boolean" ? 2 : 3);
+  return Array.from(dict.keys()).sort((a, b) => {
+    const r = rank(a) - rank(b);
+    if (r !== 0) return r;
+    if (typeof a === "number") return a - (b as number);
+    if (typeof a === "string") return compareBytes(a, b as string);
+    if (typeof a === "boolean") return Number(a) - Number(b);
+    return 0;
+  });
+}
+
 function jsonStringify(...args: unknown[]): unknown {
   between(args, 1, 2);
   let indent = 0;

@@ -21,6 +21,7 @@ import {
   BuiltinFunction,
   BoundStringMethod,
   BoundListMethod,
+  BoundDictMethod,
   BoundStaticMethod,
   SuperReferenceValue,
   ClassReference,
@@ -135,6 +136,13 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
       const sub = args[0];
       if (typeof sub !== "string") throw new RuntimeError(Codes.MethodArgMustBeString, callee.funcName);
       return callee.value.includes(sub);
+    }
+    throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
+  } else if (callee instanceof BoundDictMethod) {
+    // 사전의 메서드는 <포함확인>(키) 하나: 그 키가 있는지 (스펙 5.1).
+    if (callee.funcName === i.config.stringContainsMethod) {
+      if (args.length !== 1) throw new RuntimeError(Codes.ArgCountExact, 1);
+      return callee.dict.has(args[0]);
     }
     throw new RuntimeError(Codes.MethodNotFound, callee.funcName);
   } else if (callee instanceof BoundListMethod) {
@@ -538,6 +546,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         }
         throw new RuntimeError(Codes.ListIndexMustBeNumber);
       } else if (obj instanceof Map) {
+        if (property.type === "FunctionReference") return new BoundDictMethod(obj, property.name);
         const key = await evaluateNode(i, property, env);
         if (obj.has(key)) return obj.get(key);
         throw new RuntimeError(Codes.DictKeyNotFound, key);

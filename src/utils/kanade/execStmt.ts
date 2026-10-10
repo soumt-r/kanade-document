@@ -22,6 +22,7 @@ import { HariObject, ClassReference } from "./object";
 import { assignVariable, checkDeclaredType, checkField, requireBool } from "./types";
 import { ReturnSignal, BreakSignal, ThrownSignal } from "./errors";
 import { RuntimeError, Codes, localize } from "./errs";
+import { sortedKeys } from "./stdImpls";
 
 export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env: Environment): Promise<void> {
   switch (stmt.type) {
@@ -201,6 +202,8 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
       }
 
       if (typeof listVal === "string") listVal = Array.from(listVal);
+      // a dictionary's keys, in the order sortedKeys gives, as they were when the loop began
+      if (listVal instanceof Map) listVal = sortedKeys(listVal);
       if (!Array.isArray(listVal)) throw new RuntimeError(Codes.NotIterable);
       // a loop walks the list as it was when the loop began
       for (const item of Array.from(listVal)) {
