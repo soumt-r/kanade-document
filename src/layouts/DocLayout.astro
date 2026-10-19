@@ -8,28 +8,22 @@ const navItems = [
     { text: "「カナデ」はこんな言語です！", href: '/docs/intro' },
   ]},
   { title: '基本文法チュートリアル', links: [
-    { text: '1. 値を入れる (変数)', href: '/docs/tutorial/1-variables' },
-    { text: '2. 計算する (演算)', href: '/docs/tutorial/2-math' },
-    { text: '3. 文字を扱う (文字列)', href: '/docs/tutorial/3-strings' },
-    { text: '4. 条件分岐（もし〜なら）', href: '/docs/tutorial/4-conditions' },
-    { text: '5. スイッチ (条件分岐)', href: '/docs/tutorial/5-switch' },
-    { text: '6. 集めて入れる (リスト、辞書)', href: '/docs/tutorial/6-collections' },
-    { text: '7. 繰り返す (繰り返し文)', href: '/docs/tutorial/7-loops' },
-    { text: '8. 関数（機能を作る）', href: '/docs/tutorial/8-functions' },
-    { text: '9. エラー処理 (例外処理)', href: '/docs/tutorial/9-errors' },
-    { text: '10. 標準ライブラリ（道具箱）', href: '/docs/tutorial/10-stdlib' },
-    { text: '11. 標準ライブラリ2（もっと多くの道具）', href: '/docs/tutorial/11-stdlib-more' },
-    { text: '12. パスを扱おう', href: '/docs/tutorial/12-paths' },
+    { text: '0. はじめの一歩', href: '/docs/tutorial/0-start' },
+    { text: '1. 名札に値を入れる (変数)', href: '/docs/tutorial/1-variables' },
+    { text: '2. 入力してもらって変える', href: '/docs/tutorial/input' },
+    { text: '3. 計算する (演算)', href: '/docs/tutorial/2-math' },
+    { text: '4. 文字を扱う (文字列)', href: '/docs/tutorial/3-strings' },
+    { text: '5. 条件文（もし〜なら）', href: '/docs/tutorial/4-conditions' },
+    { text: '6. 値で分ける (によって分けよう)', href: '/docs/tutorial/5-switch' },
+    { text: '7. まとめたデータ (リスト、辞書)', href: '/docs/tutorial/6-collections' },
+    { text: '8. 繰り返す (繰り返そう)', href: '/docs/tutorial/7-loops' },
+    { text: '9. 関数（機能を作る）', href: '/docs/tutorial/8-functions' },
+    { text: '10. エラーを受け止める', href: '/docs/tutorial/9-errors' },
+    { text: '11. 標準ライブラリ（道具箱）', href: '/docs/tutorial/10-stdlib' },
+    { text: '12. 標準ライブラリ2（もっと多くの道具）', href: '/docs/tutorial/11-stdlib-more' },
+    { text: '13. パスを扱おう', href: '/docs/tutorial/12-paths' },
+    { text: '14. 小さなプログラムを作る', href: '/docs/tutorial/13-projects' },
     { text: '付録. よく出会うエラー', href: '/docs/tutorial/common-errors' },
-  ]},
-  { title: 'Hanaランタイム', links: [
-    { text: 'Hanaランタイムとは？', href: '/docs/hana/intro' },
-    { text: 'パッケージを使う・作る', href: '/docs/hana/packages' },
-    { text: '実行ファイルにまとめる', href: '/docs/hana/pack' },
-    { text: 'ファイルを扱おう', href: '/docs/hana/files' },
-    { text: 'ソケットで会話しよう', href: '/docs/hana/sockets' },
-    { text: 'Webのアドレスから取ってこよう', href: '/docs/hana/http' },
-    { text: 'タイムゾーン（timezoneパッケージ）', href: '/docs/hana/timezone' },
   ]},
   { title: 'オブジェクト指向文法', links: [
     { text: '1. クラス（設計図）', href: '/docs/oop/1-classes' },
@@ -50,12 +44,26 @@ const navItems = [
       { text: '9. コマンド (Command)', href: '/docs/patterns/9-command' },
       { text: '10. ファサード (Facade)', href: '/docs/patterns/10-facade' },
   ]},
+  { title: 'Hanaランタイム', links: [
+    { text: 'Hanaランタイムとは？', href: '/docs/hana/intro' },
+    { text: 'パッケージを使う・作る', href: '/docs/hana/packages' },
+    { text: '実行ファイルにまとめる', href: '/docs/hana/pack' },
+    { text: 'ファイルを扱おう', href: '/docs/hana/files' },
+    { text: 'ソケットで会話しよう', href: '/docs/hana/sockets' },
+    { text: 'Webのアドレスから取ってこよう', href: '/docs/hana/http' },
+    { text: 'タイムゾーン（timezoneパッケージ）', href: '/docs/hana/timezone' },
+  ]},
   { title: '技術仕様 (Spec)', links: [
     { text: '1. 言語概要および文法', href: '/docs/tech-spec/1-overview' },
     { text: '2. 構文木(AST) 構造', href: '/docs/tech-spec/2-ast' },
     { text: '3. 実行機(Interpreter)とランタイム', href: '/docs/tech-spec/3-runtime' },
   ]}
 ];
+
+const pages = navItems.flatMap((section) => section.links);
+const here = pages.findIndex((link) => Astro.url.pathname.replace(/\/$/, '') === link.href);
+const prev = here > 0 ? pages[here - 1] : undefined;
+const next = here >= 0 && here < pages.length - 1 ? pages[here + 1] : undefined;
 ---
 
 <Layout title={`${frontmatter.title} | カナデ(Kanade) 言語`} customMaxWidth="max-w-6xl">
@@ -94,6 +102,22 @@ const navItems = [
       <h1 class="!mt-0">{frontmatter.title}</h1>
       <p class="text-xl text-ink-soft !mb-12 !mt-0 leading-relaxed border-b border-rule pb-10">{frontmatter.description}</p>
       <slot />
+      {(prev || next) && (
+        <nav class="not-prose mt-16 pt-8 border-t border-rule flex justify-between gap-4 text-sm" aria-label="前のページと次のページ">
+          {prev ? (
+            <a href={prev.href} class="text-ink-soft hover:text-ink">
+              <span class="block text-ink-faint text-xs mb-1">前へ</span>
+              ← {prev.text}
+            </a>
+          ) : <span />}
+          {next ? (
+            <a href={next.href} class="text-right text-ink-soft hover:text-ink">
+              <span class="block text-ink-faint text-xs mb-1">次へ</span>
+              {next.text} →
+            </a>
+          ) : <span />}
+        </nav>
+      )}
     </article>
   </div>
 
