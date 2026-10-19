@@ -29,7 +29,7 @@ export function kanadeCompletions(context: CompletionContext): CompletionResult 
   let isProp = false;
   let needsPrefixSpace = false;
 
-  const varMatch = context.matchBefore(/『[ぁ-んァ-ン一-龥ーa-zA-Z_]*/);
+  const varMatch = context.matchBefore(/『[ぁ-んァ-ン一-龥ーa-zA-Z0-9_]*/);
   const typeMatch = context.matchBefore(/【[ぁ-んァ-ン一-龥ーa-zA-Z_]*/);
   const propMatch = context.matchBefore(/〈[ぁ-んァ-ン一-龥ーa-zA-Z_]*/);
   const particleMatch = context.matchBefore(/の\s*$/);

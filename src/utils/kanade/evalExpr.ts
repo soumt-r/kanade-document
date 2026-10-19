@@ -46,8 +46,14 @@ export async function execBlock(i: KanadeInterpreter, statements: ast.Statement[
   }
 }
 
+// The escapes of a string or template literal, read left to right once (Go's
+// ast.Unescape): \n, \t, \\ and the closing marks \" (Hari) and \「 \」 (Kanade).
+// Any other backslash is kept as written.
+const ESCAPES: Record<string, string> = { n: "\n", t: "\t", '"': '"', "\\": "\\", "「": "「", "」": "」" };
+
 function unescapeString(val: string): string {
-  return val.replaceAll("\\n", "\n").replaceAll('\\"', '"').replaceAll("\\t", "\t").replaceAll("\\\\", "\\");
+  if (!val.includes("\\")) return val;
+  return val.replace(/\\([\s\S])/gu, (all, c: string) => ESCAPES[c] ?? all);
 }
 
 /** Runs a function value — a name from `<이름>`, a declared function, a builtin, or a bound method —

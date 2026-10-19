@@ -24,7 +24,7 @@ const SPECS: Spec[] = [
   // lexed as a bare IDENT "枠" + STRING.
   { kind: tok.TEMPLATE_STRING, regex: new RegExp('^枠「(?:\\{[^{}]*\\}|\\\\[\\s\\S]|[^」\\\\{])*」') },
   { kind: tok.STRING, regex: new RegExp('^「(?:\\\\[\\s\\S]|[^」\\\\])*」') },
-  { kind: tok.VAR, regex: new RegExp("^『" + JA_WORD + "』") },
+  { kind: tok.VAR, regex: new RegExp("^『[가-힣a-zA-Zぁ-んァ-ヶ一-龯ー0-9_]+』") },
   // As Hari's: the name starts right after `〈` and stays on its line.
   { kind: tok.FUNCTION, regex: /^〈[^ \t\r\n=〉][^〉\n]*〉/ },
   // TYPE: 【(genericArgs)Name】 — generic arg list keeps ASCII parens

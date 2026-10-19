@@ -927,11 +927,14 @@ export class Parser {
   private parsePrimary(): ast.Expression {
     const t = this.consume();
     if (t.type === tok.OP && t.literal === "-") {
-      const next = this.consume();
-      if (next.type === tok.INT) {
+      const next = this.peek();
+      if (next && next.type === tok.INT) {
+        this.consume();
         return { type: "NumberLiteral", value: parseFloat("-" + next.literal) };
       }
-      return { type: "StringLiteral", value: "알수없음: -" };
+      // -'x', -('a' + 1), -<함수>(): the operand with its member/call chain,
+      // read as 0 - operand.
+      return { type: "BinaryExpression", left: { type: "NumberLiteral", value: 0 }, operator: "-", right: this.parseMemberAndCall() };
     }
     if (t.type === tok.STRING) {
       const val = t.literal.slice(this.lang.delimLen, t.literal.length - this.lang.delimLen);
