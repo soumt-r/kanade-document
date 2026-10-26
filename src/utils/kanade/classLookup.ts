@@ -5,7 +5,8 @@ import { ThrownSignal } from "./errors";
 import { HariObject } from "./object";
 
 // findInClassChain walks cls up its baseClass chain, calling visit(body) at
-// each level. visit returns true once it has found what it was looking for
+// each level, and returns the class where visit stopped it (null if none).
+// visit returns true once it has found what it was looking for
 // (or determined this class "shadows" the name even without a full match) —
 // that stops the walk, matching 하자's shadowing rule: once a name is found
 // in a class, ancestors are never consulted for the same name.
@@ -13,13 +14,14 @@ export function findInClassChain(
   i: KanadeInterpreter,
   cls: ast.ClassDeclaration | null,
   visit: (body: ast.Statement[]) => boolean,
-): void {
+): ast.ClassDeclaration | null {
   let cur = cls;
   while (cur !== null) {
-    if (visit(cur.body)) return;
-    if (cur.baseClass === null) return;
+    if (visit(cur.body)) return cur;
+    if (cur.baseClass === null) return null;
     cur = i.classes[cur.baseClass.name] ?? null;
   }
+  return null;
 }
 
 // classIsOrExtends reports whether className is targetName itself, or

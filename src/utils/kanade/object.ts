@@ -4,7 +4,7 @@
 // This port keeps that shape: runtime values are plain JS
 // number/string/boolean/null/Array/Map/Record, narrowed with `instanceof`
 // against these classes exactly where Go would type-switch on its structs.
-import type { Expression } from "./ast";
+import type { ClassDeclaration, Expression } from "./ast";
 
 export class HariObject {
   className: string;
@@ -20,6 +20,7 @@ export class BoundMethod {
     public object: HariObject,
     public funcName: string,
     public isSuper = false,
+    public from: ClassDeclaration | null = null, // for a 부모 call: the class whose method made it
   ) {}
 }
 
@@ -65,7 +66,10 @@ export class BoundStaticMethod {
 }
 
 export class SuperReferenceValue {
-  constructor(public object: HariObject) {}
+  constructor(
+    public object: HariObject,
+    public from: ClassDeclaration | null, // the class whose method said 부모
+  ) {}
 }
 
 // ClassReference는 클래스 자체를 값으로 취급할 때 씁니다 (정적 멤버 접근, instanceof 등).

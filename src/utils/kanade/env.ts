@@ -2,6 +2,7 @@
 // `this` fallback for instance-member lookup inside methods.
 import { HariObject } from "./object";
 import { RuntimeError, Codes } from "./errs";
+import type { ClassDeclaration } from "./ast";
 
 export class Environment {
   private vars = new Map<string, unknown>();
@@ -9,6 +10,7 @@ export class Environment {
   private types = new Map<string, string>(); // declared [타입] per variable of this scope
   parent: Environment | null;
   this_: HariObject | null = null;
+  class_: ClassDeclaration | null = null; // with this_: the class whose body declares the running method; 부모 starts above it
   loop = false; // a loop pass's scope: a 繰り返しを終わろう below it has a loop to leave
 
   constructor(parent: Environment | null) {

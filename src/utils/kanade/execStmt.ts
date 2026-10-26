@@ -325,7 +325,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           if (mem.property.type === "Identifier") {
             const cls = i.classes[obj.className];
             let setter: ast.SetterInfo | null = null;
-            findInClassChain(i, cls, (body) => {
+            const fieldOwner = findInClassChain(i, cls, (body) => {
               for (const s of body) {
                 if (s.type === "VariableDeclaration" && s.name.value === (mem.property as ast.Identifier).value) {
                   setter = s.setter;
@@ -338,6 +338,7 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
             if (setter !== null) {
               const setterEnv = new Environment(i.globalEnv);
               setterEnv.this_ = obj;
+              setterEnv.class_ = fieldOwner;
               setterEnv.declare("this", obj);
               setterEnv.declare("__selfClass__", obj.className);
               if ((setter as ast.SetterInfo).param) {

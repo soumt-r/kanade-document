@@ -166,12 +166,15 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
     let funcDecl: ast.FunctionDeclaration | null = null;
     let ctorDecl: ast.ConstructorDeclaration | null = null;
 
-    // super 호출이면 부모부터 탐색을 시작해, 오버라이딩되기 전의 원본을 찾는다.
-    let startCls = cls;
-    if (callee.isSuper && startCls && startCls.baseClass) {
-      startCls = i.classes[startCls.baseClass.name];
+    // super 호출이면 그 호출을 한 메서드가 선언된 클래스의 부모부터 탐색을 시작해,
+    // 오버라이딩되기 전의 원본을 찾는다. 객체의 클래스에서 시작하면 세 단계 이상의
+    // 상속에서 중간 클래스의 부모 호출이 자기 자신으로 돌아온다.
+    let startCls: ast.ClassDeclaration | null = cls ?? null;
+    if (callee.isSuper) {
+      const from = callee.from ?? startCls;
+      startCls = from && from.baseClass ? (i.classes[from.baseClass.name] ?? null) : from;
     }
-    findInClassChain(i, startCls, (body) => {
+    const owner = findInClassChain(i, startCls, (body) => {
       for (const stmt of body) {
         if (stmt.type === "FunctionDeclaration" && stmt.name.value === callee.funcName) {
           funcDecl = stmt;
@@ -188,6 +191,7 @@ export async function callValue(i: Interpreter, env: Environment, callee: unknow
     }
     const funcEnv = new Environment(i.globalEnv);
     funcEnv.this_ = callee.object;
+    funcEnv.class_ = owner;
     funcEnv.declare("this", callee.object);
     funcEnv.declare("__selfClass__", callee.object.className);
 
@@ -306,7 +310,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
     case "SuperReference": {
       let cur: Environment | null = env;
       while (cur !== null) {
-        if (cur.this_ !== null) return new SuperReferenceValue(cur.this_);
+        if (cur.this_ !== null) return new SuperReferenceValue(cur.this_, cur.class_);
         cur = cur.parent;
       }
       throw new RuntimeError(Codes.SuperOutsideMethod);
@@ -392,7 +396,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
       }
 
       let ctor: ast.ConstructorDeclaration | null = null;
-      findInClassChain(i, cls, (body) => {
+      const ctorOwner = findInClassChain(i, cls, (body) => {
         for (const stmt of body) {
           if (stmt.type === "ConstructorDeclaration") {
             ctor = stmt;
@@ -407,6 +411,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         for (const argExpr of expr.arguments) args.push(await evaluateNode(i, argExpr, env));
         const ctorEnv = new Environment(i.globalEnv);
         ctorEnv.this_ = obj;
+        ctorEnv.class_ = ctorOwner;
         ctorEnv.declare("__selfClass__", clsName);
         await bindParams(i, (ctor as ast.ConstructorDeclaration).params, args, ctorEnv);
         await execBlock(i, (ctor as ast.ConstructorDeclaration).body, ctorEnv);
@@ -469,7 +474,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         if (property.type !== "FunctionReference") {
           throw new RuntimeError(Codes.SuperMemberMustBeMethod);
         }
-        return new BoundMethod(obj.object, property.name, true);
+        return new BoundMethod(obj.object, property.name, true, obj.from);
       }
       if (obj instanceof HariObject) {
         let propName = "";
@@ -513,7 +518,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         if (isFunc) return new BoundMethod(obj, propName);
 
         let getterBody: ast.Statement[] | null = null;
-        findInClassChain(i, cls, (body) => {
+        const fieldOwner = findInClassChain(i, cls, (body) => {
           for (const stmt of body) {
             if (stmt.type === "VariableDeclaration" && stmt.name.value === propName) {
               getterBody = stmt.getter;
@@ -525,6 +530,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         if (getterBody !== null) {
           const getterEnv = new Environment(i.globalEnv);
           getterEnv.this_ = obj;
+          getterEnv.class_ = fieldOwner;
           getterEnv.declare("this", obj);
           getterEnv.declare("__selfClass__", obj.className);
           return await execBlock(i, getterBody, getterEnv);
