@@ -24,6 +24,27 @@ export function findInClassChain(
   return null;
 }
 
+// unimplementedAbstract finds an abstract method (<m>가 있어야 한다) that cls's
+// chain declares and that no class between cls and the declaring one
+// implements: [declaring class's name, method], or null when there is none.
+export function unimplementedAbstract(i: KanadeInterpreter, cls: ast.ClassDeclaration): [string, string] | null {
+  const implemented = new Set<string>();
+  const seen = new Set<ast.ClassDeclaration>();
+  let cur: ast.ClassDeclaration | null = cls;
+  while (cur !== null && !seen.has(cur)) {
+    seen.add(cur);
+    for (const stmt of cur.body) {
+      if (stmt.type === "InterfaceMethod" && !implemented.has(stmt.name.value)) return [cur.name.name, stmt.name.value];
+    }
+    for (const stmt of cur.body) {
+      if (stmt.type === "FunctionDeclaration" && !stmt.isStatic) implemented.add(stmt.name.value);
+    }
+    if (cur.baseClass === null) break;
+    cur = i.classes[cur.baseClass.name] ?? null;
+  }
+  return null;
+}
+
 // classIsOrExtends reports whether className is targetName itself, or
 // inherits from it directly/transitively via baseClass (upcasting).
 export function classIsOrExtends(i: KanadeInterpreter, className: string, targetName: string): boolean {
