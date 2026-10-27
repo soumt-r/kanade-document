@@ -31,23 +31,22 @@ const navItems = [
     { text: '3. 継承 (親から受け継ぐ)', href: '/docs/oop/3-inheritance' },
     { text: '4. インターフェース (骨組みの約束)', href: '/docs/oop/4-interfaces' },
   ]},
-  { title: 'デザインパターン (応用)', links: [
-    { text: '1. シングルトン (Singleton)', href: '/docs/patterns/1-singleton' },
-    { text: '2. ファクトリー (Factory)', href: '/docs/patterns/2-factory' },
-    { text: '3. ストラテジー (Strategy)', href: '/docs/patterns/3-strategy' },
-    { text: '4. オブザーバー (Observer)', href: '/docs/patterns/4-observer' },
-    { text: '5. ビルダー (Builder)', href: '/docs/patterns/5-builder' },
-
-      { text: '6. アダプター (Adapter)', href: '/docs/patterns/6-adapter' },
-      { text: '7. デコレーター (Decorator)', href: '/docs/patterns/7-decorator' },
-      { text: '8. ステート (State)', href: '/docs/patterns/8-state' },
-      { text: '9. コマンド (Command)', href: '/docs/patterns/9-command' },
-      { text: '10. ファサード (Facade)', href: '/docs/patterns/10-facade' },
-      { text: '11. テンプレートメソッド (Template Method)', href: '/docs/patterns/11-template-method' },
-      { text: '12. コンポジット (Composite)', href: '/docs/patterns/12-composite' },
-      { text: '13. プロキシ (Proxy)', href: '/docs/patterns/13-proxy' },
-      { text: '14. 責任の連鎖 (Chain of Responsibility)', href: '/docs/patterns/14-chain-of-responsibility' },
-      { text: '15. イテレーター (Iterator)', href: '/docs/patterns/15-iterator' },
+  { title: 'デザインパターン (応用)', groups: ['生成パターン', '構造パターン', '振る舞いパターン'], links: [
+    { text: '1. シングルトン (Singleton)', href: '/docs/patterns/1-singleton', group: '生成パターン' },
+    { text: '2. ファクトリー (Factory)', href: '/docs/patterns/2-factory', group: '生成パターン' },
+    { text: '3. ストラテジー (Strategy)', href: '/docs/patterns/3-strategy', group: '振る舞いパターン' },
+    { text: '4. オブザーバー (Observer)', href: '/docs/patterns/4-observer', group: '振る舞いパターン' },
+    { text: '5. ビルダー (Builder)', href: '/docs/patterns/5-builder', group: '生成パターン' },
+    { text: '6. アダプター (Adapter)', href: '/docs/patterns/6-adapter', group: '構造パターン' },
+    { text: '7. デコレーター (Decorator)', href: '/docs/patterns/7-decorator', group: '構造パターン' },
+    { text: '8. ステート (State)', href: '/docs/patterns/8-state', group: '振る舞いパターン' },
+    { text: '9. コマンド (Command)', href: '/docs/patterns/9-command', group: '振る舞いパターン' },
+    { text: '10. ファサード (Facade)', href: '/docs/patterns/10-facade', group: '構造パターン' },
+    { text: '11. テンプレートメソッド (Template Method)', href: '/docs/patterns/11-template-method', group: '振る舞いパターン' },
+    { text: '12. コンポジット (Composite)', href: '/docs/patterns/12-composite', group: '構造パターン' },
+    { text: '13. プロキシ (Proxy)', href: '/docs/patterns/13-proxy', group: '構造パターン' },
+    { text: '14. 責任の連鎖 (Chain of Responsibility)', href: '/docs/patterns/14-chain-of-responsibility', group: '振る舞いパターン' },
+    { text: '15. イテレーター (Iterator)', href: '/docs/patterns/15-iterator', group: '振る舞いパターン' },
   ]},
   { title: 'Hanaランタイム', links: [
     { text: 'Hanaランタイムとは？', href: '/docs/hana/intro' },
@@ -65,6 +64,8 @@ const navItems = [
   ]}
 ];
 
+const isActive = (link) => Astro.url.pathname === link.href || Astro.url.pathname === link.href + '/';
+
 const pages = navItems.flatMap((section) => section.links);
 const here = pages.findIndex((link) => Astro.url.pathname.replace(/\/$/, '') === link.href);
 const prev = here > 0 ? pages[here - 1] : undefined;
@@ -74,28 +75,40 @@ const next = here >= 0 && here < pages.length - 1 ? pages[here + 1] : undefined;
 <Layout title={`${frontmatter.title} | カナデ(Kanade) 言語`} customMaxWidth="max-w-6xl">
   <div class="doc-shell flex flex-col md:flex-row gap-12 lg:gap-16 mt-6">
     <aside class="doc-aside w-full md:w-56 shrink-0 border-b md:border-b-0 border-rule pb-8 md:pb-0">
-      <nav class="md:sticky md:top-10 md:max-h-[calc(100vh-5rem)] md:overflow-y-auto space-y-9 md:pr-2" aria-label="目次">
-        {navItems.map((section) => (
-          <div>
-            <h4 class="font-display font-bold text-ink mb-3 text-[15px]">{section.title}</h4>
-            <ul class="border-l border-rule">
-              {section.links.map((link) => {
-                const isActive = Astro.url.pathname === link.href || Astro.url.pathname === link.href + '/';
-                return (
-                  <li>
-                    <a
-                      href={link.href}
-                      aria-current={isActive ? 'page' : undefined}
-                      class={`block text-sm py-1.5 pl-4 -ml-px border-l-2 transition-colors ${isActive ? 'border-verb text-ink font-semibold' : 'border-transparent text-ink-soft hover:text-ink hover:border-ink-faint'}`}
-                    >
-                      {link.text}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+      <nav class="md:sticky md:top-10 md:max-h-[calc(100vh-5rem)] md:overflow-y-auto space-y-6 md:pr-2" aria-label="目次">
+        {navItems.map((section) => {
+          // Only the section with the page you are on starts open.
+          const open = section.links.some((link) => isActive(link));
+          const parts = section.groups
+            ? section.groups.map((group) => ({ group, links: section.links.filter((link) => link.group === group) }))
+            : [{ group: undefined, links: section.links }];
+          return (
+            <details class="group" open={open}>
+              <summary class="flex items-center justify-between gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden font-display font-bold text-ink text-[15px] mb-3 select-none">
+                <span>{section.title}</span>
+                <span class="text-ink-faint text-xs transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+              </summary>
+              {parts.map((part) => (
+                <div class={part.group ? 'mb-3' : ''}>
+                  {part.group && <p class="text-xs text-ink-faint mb-1.5 pl-1">{part.group}</p>}
+                  <ul class="border-l border-rule">
+                    {part.links.map((link) => (
+                      <li>
+                        <a
+                          href={link.href}
+                          aria-current={isActive(link) ? 'page' : undefined}
+                          class={`block text-sm py-1.5 pl-4 -ml-px border-l-2 transition-colors ${isActive(link) ? 'border-verb text-ink font-semibold' : 'border-transparent text-ink-soft hover:text-ink hover:border-ink-faint'}`}
+                        >
+                          {link.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </details>
+          );
+        })}
 
         <button id="open-side-playground" class="hr-run solid w-full py-2.5">
           直接実行してみる
