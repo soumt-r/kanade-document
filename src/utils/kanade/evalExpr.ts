@@ -385,13 +385,24 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
       if (cls.isAbstract) throw new RuntimeError(Codes.AbstractClass, clsName);
       const obj = new HariObject(clsName);
 
-      for (const stmt of cls.body) {
-        if (stmt.type === "VariableDeclaration" && !stmt.isStatic) {
-          const initial = await evaluateNode(i, stmt.value, env);
-          checkInitialField(i, stmt, initial);
-          obj.props[stmt.name.value] = initial;
-        } else if (stmt.type === "Assignment" && stmt.target.type === "Identifier") {
-          obj.props[stmt.target.value] = await evaluateNode(i, stmt.value, env);
+      // The ancestors' field initializers run first, from the top of the chain down,
+      // so every object gets its own value of each inherited field and a child's
+      // field of the same name wins (spec 3.5; mirrors hana's initFields).
+      const chain: ast.ClassDeclaration[] = [];
+      for (let c: ast.ClassDeclaration | undefined = cls; c && !chain.includes(c); ) {
+        chain.push(c);
+        if (c.baseClass === null) break;
+        c = i.classes[c.baseClass.name];
+      }
+      for (const c of chain.reverse()) {
+        for (const stmt of c.body) {
+          if (stmt.type === "VariableDeclaration" && !stmt.isStatic) {
+            const initial = await evaluateNode(i, stmt.value, env);
+            checkInitialField(i, stmt, initial);
+            obj.props[stmt.name.value] = initial;
+          } else if (stmt.type === "Assignment" && stmt.target.type === "Identifier") {
+            obj.props[stmt.target.value] = await evaluateNode(i, stmt.value, env);
+          }
         }
       }
 
