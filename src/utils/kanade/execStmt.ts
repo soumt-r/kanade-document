@@ -15,7 +15,7 @@
 import * as ast from "./ast";
 import type { KanadeInterpreter } from "./interpreter";
 import { Environment } from "./env";
-import { evaluateNode, execBlock } from "./evalExpr";
+import { evaluateNode, execBlock, checkAccess } from "./evalExpr";
 import { popFromList, pushOnto, takeBack, checkListPush, requireMutable } from "./listOps";
 import { findInClassChain, thrownValueMatchesType } from "./classLookup";
 import { HariObject, ClassReference } from "./object";
@@ -325,15 +325,18 @@ export async function executeStmt(i: KanadeInterpreter, stmt: ast.Statement, env
           if (mem.property.type === "Identifier") {
             const cls = i.classes[obj.className];
             let setter: ast.SetterInfo | null = null;
+            let access = "public";
             const fieldOwner = findInClassChain(i, cls, (body) => {
               for (const s of body) {
                 if (s.type === "VariableDeclaration" && s.name.value === (mem.property as ast.Identifier).value) {
                   setter = s.setter;
+                  access = s.accessModifier;
                   return true;
                 }
               }
               return false;
             });
+            checkAccess(access, false, (mem.property as ast.Identifier).value, obj, env);
 
             if (setter !== null) {
               const setterEnv = new Environment(i.globalEnv);

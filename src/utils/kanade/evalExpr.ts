@@ -29,6 +29,20 @@ import {
 import { ReturnSignal } from "./errors";
 import { parseExpressionFromSource } from "./parser";
 import { RuntimeError, Codes, accessViolation } from "./errs";
+
+// checkAccess throws unless code running in env may use obj's member name,
+// read or written, given the member's access: a hidden member only from obj's
+// own methods (and constructor), a protected one from any method.
+export function checkAccess(access: string, isFunc: boolean, name: string, obj: HariObject, env: Environment): void {
+  if (access === "public") return;
+  const [thisObj, hasThis] = env.get("this");
+  if (!hasThis) {
+    throw accessViolation(access, isFunc, name);
+  }
+  if (access === "private" && thisObj !== obj) {
+    throw accessViolation(access, isFunc, name);
+  }
+}
 import { compareBytes } from "./stdImpls";
 
 // execBlock runs a statement list in env and returns the function's return
@@ -422,6 +436,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
         for (const argExpr of expr.arguments) args.push(await evaluateNode(i, argExpr, env));
         const ctorEnv = new Environment(i.globalEnv);
         ctorEnv.this_ = obj;
+        ctorEnv.declare("this", obj);
         ctorEnv.class_ = ctorOwner;
         ctorEnv.declare("__selfClass__", clsName);
         await bindParams(i, (ctor as ast.ConstructorDeclaration).params, args, ctorEnv);
@@ -516,15 +531,7 @@ async function evaluateNodeInner(i: KanadeInterpreter, expr: ast.Expression, env
           return false;
         });
 
-        if (access !== "public") {
-          const [thisObj, hasThis] = env.get("this");
-          if (!hasThis) {
-            throw accessViolation(access, isFunc, propName);
-          }
-          if (access === "private" && thisObj !== obj) {
-            throw accessViolation(access, isFunc, propName);
-          }
-        }
+        checkAccess(access, isFunc, propName, obj, env);
 
         if (isFunc) return new BoundMethod(obj, propName);
 
